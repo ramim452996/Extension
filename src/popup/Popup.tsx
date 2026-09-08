@@ -1,0 +1,229 @@
+import { useEffect, useState, useCallback } from 'react'
+import type { PageSnapshot, CurrentTab } from '../types'
+import { getState, addPage, removePage, setGoal, clearAll } from '../storage/compareStorage'
+import { pageExtractorFunction } from '../content/PageExtractor'
+import PageInfo from './components/PageInfo'
+import PageList from './components/PageList'
+import GoalInput from './components/GoalInput'
+import CompareButton from './components/CompareButton'
+
+// ── Status ────────────────────────────────────────────────────────────────────
+type Status = 'init' | 'ready' | 'extracting' | 'error'
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function isBrowserInternalUrl(url: string | undefined): boolean {
+  if (!url) return true
+  return (
+    url.startsWith('chrome://') ||
+    url.startsWith('chrome-extension://') ||
+    url.startsWith('edge://') ||
+    url.startsWith('about:') ||
+    url.startsWith('moz-extension://')
+  )
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+export default function Popup() {
+  const [pages, setPages] = useState<PageSnapshot[]>([])
+  const [goal, setGoalState] = useState('')
+  const [currentTab, setCurrentTab] = useState<CurrentTab | null>(null)
+  const [status, setStatus] = useState<Status>('init')
+  const [errorMsg, setErrorMsg] = useState('')
+
+  // ── Derived state ────────────────────────────────────────────────────────
+  const isBrowserPage = isBrowserInternalUrl(currentTab?.url)
+  const isDuplicate = !isBrowserPage && !!currentTab?.url && pages.some((p) => p.url === currentTab.url)
+  const isAtMax = pages.length >= 4
+  const canAdd = !isBrowserPage && !isDuplicate && !isAtMax && status !== 'extracting'
+
+  // ── Init ─────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    async function init() {
+      // Load persisted state
+      const state = await getState()
+      setPages(state.pages)
+      setGoalState(state.goal)
+
+      // Query active tab
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs[0]
+        if (tab && tab.id) {
+          setCurrentTab({
+            id: tab.id,
+            url: tab.url ?? '',
+            title: tab.title ?? 'Untitled',
+          })
+        }
+        setStatus('ready')
+      })
+    }
+    init()
+  }, [])
+
+  // ── Add current page ─────────────────────────────────────────────────────
+  const handleAddPage = useCallback(async () => {
+    if (!currentTab?.id || !canAdd) return
+
+    setStatus('extracting')
+    setErrorMsg('')
+
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: currentTab.id },
+        func: pageExtractorFunction,
+      })
+
+      const snapshot = results[0]?.result
+      if (!snapshot) throw new Error('Extractor returned no data.')
+
+      const updated = await addPage(snapshot)
+      setPages(updated)
+      setStatus('ready')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error'
+      setErrorMsg(`Could not capture page: ${message}`)
+      setStatus('error')
+      // Auto-clear error after 4s
+      setTimeout(() => {
+        setStatus('ready')
+        setErrorMsg('')
+      }, 4000)
+    }
+  }, [currentTab, canAdd])
+
+  // ── Remove a page ────────────────────────────────────────────────────────
+  const handleRemove = useCallback(async (id: string) => {
+    const updated = await removePage(id)
+    setPages(updated)
+  }, [])
+
+  // ── Goal update ──────────────────────────────────────────────────────────
+  const handleGoalChange = useCallback(async (value: string) => {
+    setGoalState(value)
+    await setGoal(value)
+  }, [])
+
+  // ── Clear workspace ──────────────────────────────────────────────────────
+  const handleClear = useCallback(async () => {
+    await clearAll()
+    setPages([])
+    setGoalState('')
+  }, [])
+
+  // ── Compare (Day 3 placeholder) ──────────────────────────────────────────
+  const handleCompare = useCallback(() => {
+    // Day 3: will POST pages + goal to https://compare-backend.test/api/compare
+    console.log('[Compare Anything] Compare triggered', { pages, goal })
+  }, [pages, goal])
+
+  // ── Add button label / disabled logic ────────────────────────────────────
+  function addButtonLabel(): string {
+    if (status === 'extracting') return 'Extracting page…'
+    if (isAtMax) return 'Maximum 4 pages reached'
+    if (isDuplicate) return 'Already added ✓'
+    return '+ ADD TO COMPARISON'
+  }
+
+  function addButtonClass(): string {
+    if (isAtMax || isBrowserPage) return 'add-btn add-btn-disabled'
+    if (isDuplicate) return 'add-btn add-btn-duplicate'
+    return 'add-btn add-btn-active'
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  if (status === 'init') {
+    return (
+      <div className="popup-loading">
+        <div className="spinner" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="popup-scroll">
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <header className="popup-header">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">⚡</span>
+          <div>
+            <h1 className="text-[15px] font-bold gradient-text leading-none">
+              Compare Anything
+            </h1>
+            <p className="text-[10px] text-white/30 mt-0.5 font-medium tracking-wide">
+              AI-powered page comparison
+            </p>
+          </div>
+          {pages.length > 0 && (
+            <span className="ml-auto text-[10px] font-bold bg-white/10 rounded-full px-2 py-0.5 text-white/60">
+              {pages.length}/4
+            </span>
+          )}
+        </div>
+      </header>
+
+      {/* ── Current Page Info ────────────────────────────────────────────── */}
+      <PageInfo currentTab={currentTab} isBrowserPage={isBrowserPage} />
+
+      {/* ── Status Alerts ───────────────────────────────────────────────── */}
+      <div className="px-4 pt-3 space-y-2">
+        {status === 'error' && errorMsg && (
+          <div className="alert alert-error">
+            <span>⚠️</span>
+            <span>{errorMsg}</span>
+          </div>
+        )}
+        {isDuplicate && !isBrowserPage && (
+          <div className="alert alert-warning">
+            <span>⚠️</span>
+            <span>This page is already in your comparison list.</span>
+          </div>
+        )}
+
+        {/* ── Add Button ──────────────────────────────────────────────── */}
+        {!isBrowserPage && (
+          <button
+            id="add-to-comparison-btn"
+            className={addButtonClass()}
+            onClick={handleAddPage}
+            disabled={!canAdd}
+            aria-label="Add current page to comparison"
+          >
+            {status === 'extracting' ? (
+              <>
+                <span className="spinner" />
+                Extracting page…
+              </>
+            ) : (
+              addButtonLabel()
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* ── Page List ───────────────────────────────────────────────────── */}
+      <PageList pages={pages} onRemove={handleRemove} />
+
+      {/* ── Goal Input ──────────────────────────────────────────────────── */}
+      {pages.length > 0 && (
+        <GoalInput value={goal} onChange={handleGoalChange} />
+      )}
+
+      {/* ── Compare Button ──────────────────────────────────────────────── */}
+      <CompareButton pages={pages} onClick={handleCompare} />
+
+      {/* ── Footer: Clear ───────────────────────────────────────────────── */}
+      {pages.length > 0 && (
+        <div className="px-4 pb-4 flex justify-center">
+          <button
+            id="clear-comparison-btn"
+            className="clear-btn"
+            onClick={handleClear}
+            aria-label="Clear all pages from comparison"
+          >
+            Clear Comparison
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
