@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Compare Anything",
+  "version": "0.1.0",
+  "description": "Capture any web pages and compare them side-by-side with AI insights.",
+
+  "permissions": ["activeTab", "scripting", "storage"],
+
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Compare Anything"
+  },
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
+}
