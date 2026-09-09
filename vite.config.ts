@@ -35,7 +35,7 @@ export default defineConfig({
         // MV3 service worker (must be a single, standalone file)
         background: resolve(__dirname, 'src/background/serviceWorker.ts'),
         // Content / injector script (standalone, no shared chunks)
-        content: resolve(__dirname, 'src/content/PageExtractor.ts'),
+        content: resolve(__dirname, 'src/content/extractor.ts'),
       },
 
       output: {

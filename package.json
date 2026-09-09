@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite build --watch",
     "build": "vite build",
+    "package": "vite build && powershell -Command \"Compress-Archive -Path dist/* -DestinationPath ../store-assets/compare-anything-v1.0.0.zip -Force\"",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

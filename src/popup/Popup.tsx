@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import type { PageSnapshot, CurrentTab } from '../types'
 import { getState, addPage, removePage, setGoal, clearAll } from '../storage/compareStorage'
-import { pageExtractorFunction } from '../content/PageExtractor'
+import { pageExtractorFunction } from '../content/extractor'
 import PageInfo from './components/PageInfo'
 import PageList from './components/PageList'
 import GoalInput from './components/GoalInput'

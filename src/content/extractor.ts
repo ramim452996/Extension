@@ -59,7 +59,7 @@ export function pageExtractorFunction(): PageSnapshot {
 
   /** Check if element or any ancestor is a junk container */
   function isJunk(el: Element): boolean {
-    const junkTags = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'NAV', 'FOOTER', 'HEADER', 'IFRAME'])
+    const junkTags = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'NAV', 'FOOTER', 'HEADER', 'IFRAME', 'SVG'])
     if (junkTags.has(el.tagName)) return true
 
     const junkMatchers = [
@@ -269,4 +269,9 @@ export function pageExtractorFunction(): PageSnapshot {
   }
 
   return { id, url, domain, title, importantText, capturedAt }
+}
+
+// When injected directly as a content script, run and store on window
+if (typeof window !== 'undefined') {
+  (window as any).__compare_page_snapshot = pageExtractorFunction()
 }
