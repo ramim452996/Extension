@@ -7,9 +7,14 @@
     "128": "icon128.png"
   },
   "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": [
+    "https://compare-backend.test/*",
+    "https://*.sharedwithexpose.com/*"
+  ],
   "action": {
     "default_popup": "index.html",
-    "default_title": "Compare Anything"
+    "default_title": "Compare Anything",
+    "default_icon": "icon128.png"
   },
   "background": {
     "service_worker": "background.js",

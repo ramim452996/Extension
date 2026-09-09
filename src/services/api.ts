@@ -1,7 +1,7 @@
 import type { PageSnapshot, CompareState } from '../types'
+import { API_BASE_URL } from '../config'
 
-// Herd runs automatically in the background on https://compare-backend.test (no artisan serve needed)
-const API_URL = 'https://compare-backend.test/api/v1/compare'
+const API_URL = `${API_BASE_URL}/compare`
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
