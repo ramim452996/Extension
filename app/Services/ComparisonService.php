@@ -106,14 +106,23 @@ PROMPT;
     {
         $userPrompt = $this->buildUserPrompt($payload);
 
-        // Primary: Groq
+        // Primary: Groq (with model fallback if needed)
         try {
             return $this->callProvider('groq', $userPrompt);
         } catch (\Throwable $groqException) {
-            // Log Groq failure and try fallback
-            logger()->warning('ComparisonService: Groq failed, falling back to OpenRouter.', [
+            logger()->warning('ComparisonService: Groq primary failed.', [
                 'error' => $groqException->getMessage(),
             ]);
+
+            // Try Groq secondary model before falling back to OpenRouter
+            try {
+                logger()->info('ComparisonService: Retrying Groq with openai/gpt-oss-20b...');
+                return $this->callProvider('groq', $userPrompt, 'openai/gpt-oss-20b');
+            } catch (\Throwable $groqSecondaryException) {
+                logger()->warning('ComparisonService: Groq secondary also failed.', [
+                    'error' => $groqSecondaryException->getMessage(),
+                ]);
+            }
         }
 
         // Fallback: OpenRouter
@@ -140,9 +149,10 @@ PROMPT;
      *
      * @throws \RuntimeException  On HTTP error or invalid JSON response
      */
-    private function callProvider(string $provider, string $userPrompt): array
+    private function callProvider(string $provider, string $userPrompt, ?string $overrideModel = null): array
     {
         $cfg = config("services.{$provider}");
+        $model = $overrideModel ?? $cfg['model'];
         $maxAttempts = 3;
         $attempt = 0;
 
@@ -155,13 +165,13 @@ PROMPT;
             ])
                 ->timeout(90)
                 ->post($cfg['endpoint'], [
-                    'model'           => $cfg['model'],
+                    'model'           => $model,
                     'messages'        => [
                         ['role' => 'system', 'content' => self::SYSTEM_PROMPT],
                         ['role' => 'user',   'content' => $userPrompt],
                     ],
                     'temperature'     => 0.1,   // deterministic, factual output
-                    'max_tokens'      => 2048,
+                    'max_tokens'      => 3000,
                     'response_format' => ['type' => 'json_object'],
                 ]);
 
@@ -230,6 +240,24 @@ PROMPT;
         if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
             return $decoded;
         }
+
+        // Attempt 3: If JSON was cut off or has trailing commas, clean and close brackets
+        $repaired = preg_replace('/,\s*([\]\}])/', '$1', $sanitized);
+        $openBraces = substr_count($repaired, '{') - substr_count($repaired, '}');
+        $openBrackets = substr_count($repaired, '[') - substr_count($repaired, ']');
+        if ($openBraces > 0 || $openBrackets > 0) {
+            $repaired .= str_repeat(']', max(0, $openBrackets)) . str_repeat('}', max(0, $openBraces));
+            $decoded = json_decode($repaired, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        logger()->error("ComparisonService: [{$provider}] Raw output failed JSON parse.", [
+            'raw_content_preview' => substr($content, 0, 500),
+            'raw_content_tail'    => substr($content, -300),
+            'json_error'          => json_last_error_msg(),
+        ]);
 
         throw new \RuntimeException(
             "[{$provider}] Response is not valid JSON: " . json_last_error_msg()
