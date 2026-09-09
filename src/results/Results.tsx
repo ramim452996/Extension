@@ -242,17 +242,17 @@ export default function Results() {
         </section>
 
         {/* Differences & Missing Info Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {Array.isArray(data.keyDifferences) && data.keyDifferences.length > 0 && (
-            <section className="bg-gray-900 rounded-xl border border-gray-800 p-6 shadow-md">
-              <h3 className="font-semibold text-lg mb-4 text-gray-200 flex items-center gap-2">
+            <section className="bg-gray-900/90 rounded-xl border border-gray-800 p-6 shadow-md flex flex-col">
+              <h3 className="font-semibold text-lg mb-4 text-gray-100 flex items-center gap-2">
                 <span>🔍</span> Key Differences
               </h3>
-              <ul className="space-y-2.5 text-gray-300 text-sm">
+              <ul className="space-y-3 text-sm flex-1">
                 {data.keyDifferences.map((diff: any, i: number) => (
-                  <li key={i} className="flex gap-2">
-                    <span className="text-blue-500 font-bold">•</span>
-                    <span className="break-words leading-relaxed">{safeText(diff, 'Not stated')}</span>
+                  <li key={i} className="flex items-start gap-2.5">
+                    <span className="text-blue-400 font-bold leading-5 select-none">•</span>
+                    <span className="text-gray-300 break-words leading-relaxed">{safeText(diff, 'Not stated')}</span>
                   </li>
                 ))}
               </ul>
@@ -260,11 +260,11 @@ export default function Results() {
           )}
 
           {Array.isArray(data.missingInformation) && data.missingInformation.length > 0 && (
-            <section className="bg-gray-900 rounded-xl border border-gray-800 p-6 shadow-md">
-              <h3 className="font-semibold text-lg mb-4 text-gray-200 flex items-center gap-2">
-                <span>⚠️</span> Missing Information
+            <section className="bg-gray-900/90 rounded-xl border border-gray-800 p-6 shadow-md flex flex-col">
+              <h3 className="font-semibold text-lg mb-4 text-gray-100 flex items-center gap-2">
+                <span className="text-amber-400">⚠️</span> Missing Information
               </h3>
-              <ul className="space-y-3 text-sm">
+              <div className="space-y-4 text-sm flex-1">
                 {data.missingInformation.map((mi: any, i: number) => {
                   const item = items.find((it: any) => it.id === mi.itemId)
                   const itemLabel = safeText(item?.displayName || mi.itemId, 'Item')
@@ -273,20 +273,58 @@ export default function Results() {
                         .map((f: any) => safeText(f, ''))
                         .filter((f: string) => f.length > 0 && f !== 'Not stated')
                     : []
-                  const fieldsContent = fieldsList.length > 0 ? fieldsList.join(', ') : 'Not stated'
+
                   return (
-                    <li key={i} className="flex gap-2">
-                      <span className="text-amber-500 font-bold shrink-0">{itemLabel}:</span>
-                      <span className="text-gray-400 break-words leading-relaxed">
-                        {fieldsContent === 'Not stated' ? renderFallbackMuted('Not stated') : fieldsContent}
-                      </span>
-                    </li>
+                    <div key={i} className="bg-gray-950/60 rounded-lg p-3.5 border border-gray-800/80 space-y-2">
+                      <div className="font-semibold text-amber-400/90 break-words text-sm leading-snug">
+                        {itemLabel}
+                      </div>
+                      {fieldsList.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                          {fieldsList.map((field: string, fIdx: number) => (
+                            <span 
+                              key={fIdx} 
+                              className="inline-block bg-gray-800/90 text-gray-300 border border-gray-700/60 text-xs px-2.5 py-1 rounded-md"
+                            >
+                              {field}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <div>
+                          {renderFallbackMuted('No missing specs noted')}
+                        </div>
+                      )}
+                    </div>
                   )
                 })}
-              </ul>
+              </div>
             </section>
           )}
         </div>
+
+        {/* Source Links (if provided) */}
+        {Array.isArray(data.sourceLinks) && data.sourceLinks.length > 0 && (
+          <section className="bg-gray-900/60 rounded-xl border border-gray-800/80 p-5">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-1.5">
+              <span>🔗</span> Source Webpages
+            </h4>
+            <div className="flex flex-wrap gap-3">
+              {data.sourceLinks.map((link: any, idx: number) => (
+                <a
+                  key={idx}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 bg-gray-800/80 hover:bg-gray-700/80 text-blue-400 hover:text-blue-300 text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-700/50 transition-colors max-w-sm truncate"
+                >
+                  <span className="truncate">{safeText(link.title || link.url)}</span>
+                  <span className="shrink-0 text-gray-500">↗</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
 
       </div>
     </div>
