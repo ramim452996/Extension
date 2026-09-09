@@ -6,9 +6,10 @@ import PageInfo from './components/PageInfo'
 import PageList from './components/PageList'
 import GoalInput from './components/GoalInput'
 import CompareButton from './components/CompareButton'
+import { fetchComparison, ApiError } from '../services/api'
 
 // ── Status ────────────────────────────────────────────────────────────────────
-type Status = 'init' | 'ready' | 'extracting' | 'error'
+type Status = 'init' | 'ready' | 'extracting' | 'comparing' | 'error'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function isBrowserInternalUrl(url: string | undefined): boolean {
@@ -43,6 +44,14 @@ export default function Popup() {
       const state = await getState()
       setPages(state.pages)
       setGoalState(state.goal)
+
+      // Get installId (should be set by background script or generated on init)
+      // Since it's required for the API, ensure it exists in state
+      if (!state.installId) {
+        // Fallback in case background hasn't set it yet
+        state.installId = 'install-' + Math.random().toString(36).substr(2, 9)
+        await chrome.storage.local.set({ installId: state.installId })
+      }
 
       // Query active tab
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -110,15 +119,41 @@ export default function Popup() {
     setGoalState('')
   }, [])
 
-  // ── Compare (Day 3 placeholder) ──────────────────────────────────────────
-  const handleCompare = useCallback(() => {
-    // Day 3: will POST pages + goal to https://compare-backend.test/api/compare
-    console.log('[Compare Anything] Compare triggered', { pages, goal })
+  // ── Compare ──────────────────────────────────────────────────────────────
+  const handleCompare = useCallback(async () => {
+    if (pages.length < 2) return
+
+    setStatus('comparing')
+    setErrorMsg('')
+
+    try {
+      const state = await getState()
+      const installId = state.installId || 'fallback-install-id'
+
+      const result = await fetchComparison(installId, goal, pages)
+      
+      // Save result to storage
+      await chrome.storage.local.set({ latestComparison: result })
+      
+      // Open results page
+      chrome.tabs.create({ url: chrome.runtime.getURL('results.html') })
+      
+      setStatus('ready')
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setErrorMsg(err.message)
+      } else {
+        const message = err instanceof Error ? err.message : 'Unknown error'
+        setErrorMsg(`Failed to compare: ${message}`)
+      }
+      setStatus('error')
+    }
   }, [pages, goal])
 
   // ── Add button label / disabled logic ────────────────────────────────────
   function addButtonLabel(): string {
     if (status === 'extracting') return 'Extracting page…'
+    if (status === 'comparing') return 'Comparing pages…'
     if (isAtMax) return 'Maximum 4 pages reached'
     if (isDuplicate) return 'Already added ✓'
     return '+ ADD TO COMPARISON'
@@ -185,13 +220,13 @@ export default function Popup() {
             id="add-to-comparison-btn"
             className={addButtonClass()}
             onClick={handleAddPage}
-            disabled={!canAdd}
+            disabled={!canAdd || status === 'comparing'}
             aria-label="Add current page to comparison"
           >
-            {status === 'extracting' ? (
+            {status === 'extracting' || status === 'comparing' ? (
               <>
                 <span className="spinner" />
-                Extracting page…
+                {status === 'extracting' ? 'Extracting page…' : 'Comparing pages…'}
               </>
             ) : (
               addButtonLabel()

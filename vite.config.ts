@@ -21,6 +21,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    // Disable module preload to prevent content.js from being preloaded in the popup
+    modulePreload: false,
     // Disable source maps in prod for smaller bundle
     sourcemap: false,
 
@@ -28,6 +30,8 @@ export default defineConfig({
       input: {
         // Popup SPA entry
         popup: resolve(__dirname, 'index.html'),
+        // Results page entry
+        results: resolve(__dirname, 'results.html'),
         // MV3 service worker (must be a single, standalone file)
         background: resolve(__dirname, 'src/background/serviceWorker.ts'),
         // Content / injector script (standalone, no shared chunks)

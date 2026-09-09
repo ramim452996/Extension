@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: #030712; /* gray-950 */
+  color: #f3f4f6; /* gray-100 */
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
