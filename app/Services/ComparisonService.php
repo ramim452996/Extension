@@ -19,6 +19,7 @@ RULES (NEVER VIOLATE):
 4. Dynamically determine 5–10 comparison criteria that are most relevant to the items and the user's goal.
 5. For each criterion, determine which item(s) win and why, based solely on stated facts.
 6. Your entire response MUST be a single valid JSON object matching the schema below. No prose, no markdown fences, no extra keys.
+7. CRITICAL — IDs: Every "id" and "itemId" field in your output MUST be the EXACT "id" string taken from the PAGE_SNAPSHOTS (e.g. "page-1", "page-2"). Never rename, shorten, or invent IDs.
 
 OUTPUT JSON SCHEMA (follow exactly):
 {
@@ -26,25 +27,25 @@ OUTPUT JSON SCHEMA (follow exactly):
   "comparisonType": "string",
   "goal": "string or null",
   "items": [
-    { "id": "string", "displayName": "string", "shortDescription": "string" }
+    { "id": "EXACT id from PAGE_SNAPSHOTS", "displayName": "string", "shortDescription": "string" }
   ],
   "criteria": [
     {
       "name": "string",
       "importance": "high|medium|low",
       "values": [
-        { "itemId": "string", "value": "string", "confidence": "high|medium|low" }
+        { "itemId": "EXACT id from PAGE_SNAPSHOTS", "value": "string", "confidence": "high|medium|low" }
       ],
-      "winnerItemIds": ["string"]
+      "winnerItemIds": ["EXACT ids from PAGE_SNAPSHOTS"]
     }
   ],
-  "bestOverall": { "itemId": "string", "reason": "string" },
+  "bestOverall": { "itemId": "EXACT id from PAGE_SNAPSHOTS", "reason": "string" },
   "bestFor": [
-    { "label": "string", "itemId": "string", "reason": "string" }
+    { "label": "string", "itemId": "EXACT id from PAGE_SNAPSHOTS", "reason": "string" }
   ],
   "keyDifferences": ["string"],
   "missingInformation": [
-    { "itemId": "string", "fields": ["string"] }
+    { "itemId": "EXACT id from PAGE_SNAPSHOTS", "fields": ["string"] }
   ]
 }
 PROMPT;
@@ -162,13 +163,22 @@ PROMPT;
             JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT
         );
 
+        // Build an explicit ID mapping so the model cannot confuse them
+        $idMapping = implode('\n', array_map(
+            fn ($page) => "  id=\"{$page['id']}\" → {$page['title']} ({$page['domain']})",
+            $payload['pages']
+        ));
+
         return <<<PROMPT
 USER_GOAL: {$goal}
+
+ITEM ID MAPPING (use these EXACT id values in all itemId fields):
+{$idMapping}
 
 PAGE_SNAPSHOTS:
 {$snapshotsJson}
 
-Using ONLY the facts in PAGE_SNAPSHOTS, produce the comparison JSON. Do not add any prose outside the JSON object.
+Using ONLY the facts in PAGE_SNAPSHOTS, produce the comparison JSON. Use the EXACT id values from ITEM ID MAPPING above. Do not add any prose outside the JSON object.
 PROMPT;
     }
 }
