@@ -16,3 +16,5 @@ use Illuminate\Support\Facades\Route;
 
 // ── Compare Anything ──────────────────────────────────────────────────────────
 Route::post('/v1/compare', CompareController::class);
+Route::post('/compare', CompareController::class);
+

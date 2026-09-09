@@ -22,3 +22,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Build & Archives
+dist/
+*.zip
+bin/
+obj/
