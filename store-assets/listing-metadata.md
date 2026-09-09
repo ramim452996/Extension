@@ -11,15 +11,15 @@
 ## 2. Short Summary / Promo Text (Section 37)
 **Summary (max 132 chars):**  
 ```text
-Compare 2 to 4 open tabs side-by-side with zero hallucination. Spot differences, pricing, and specs based strictly on page text.
+Add 2–4 web pages and get one clear AI comparison table based only on the information on those pages.
 ```
-*(Exact length: 126 characters)*
+*(Exact length: 101 characters)*
 
 ---
 
 ## 3. Single-Purpose Statement (Section 38)
 ```text
-Compare Anything serves one focused single purpose: it extracts user-selected webpage text from 2 to 4 active browser tabs and generates a structured, side-by-side comparative table highlighting differences, trade-offs, and criteria match with zero AI hallucination.
+Compare Anything allows users to select webpages and generate an AI-assisted side-by-side comparison of the information contained on those selected pages.
 ```
 
 ---
@@ -78,3 +78,32 @@ Compare Anything adheres strictly to the Google Chrome Web Store Single-Purpose 
 **Version:** 1.0.0  
 **Category:** Productivity / Workflow & Planning  
 **Support:** https://github.com/ramim452996/Extension/issues
+
+---
+
+## 5. Chrome Web Store Screenshot Guide (1280x800)
+
+1. **Screenshot 1 — The Popup Workspace:**
+   - **Resolution:** 1280x800 px.
+   - **Visual:** Chrome browser with 3 active tabs open (e.g., 3 laptops or SaaS plans) and the Compare Anything extension popup open showing the 3 added tabs, a clear priority ("Best battery life under $1,200"), and the active "+ ADD TO COMPARISON" button.
+   - **Overlay Headline:** "Add 2 to 4 Open Tabs in One Click."
+
+2. **Screenshot 2 — Side-by-Side Comparison Matrix:**
+   - **Resolution:** 1280x800 px.
+   - **Visual:** Full-screen results page showing a 3-column table comparing technical specifications, monthly pricing, trial periods, and support SLAs.
+   - **Overlay Headline:** "Instant Side-by-Side Comparison Table."
+
+3. **Screenshot 3 — Zero Hallucination Guarantee:**
+   - **Resolution:** 1280x800 px.
+   - **Visual:** Close-up on the table highlighting cells where missing data is strictly marked as "Not stated" in muted badges, alongside the "Missing Information" section.
+   - **Overlay Headline:** "Zero Hallucination — Grounded Only in Page Facts."
+
+4. **Screenshot 4 — Best Overall & Tailored Best-For Verdicts:**
+   - **Resolution:** 1280x800 px.
+   - **Visual:** The "Best Overall" recommendation card and "Best For" badges (e.g., Best for Budget, Best for Performance) based on user priority.
+   - **Overlay Headline:** "Objective Winner Analysis & Trade-Offs."
+
+5. **Screenshot 5 — One-Click Export to Markdown & CSV:**
+   - **Resolution:** 1280x800 px.
+   - **Visual:** User clicking "Copy Markdown" and "Download CSV" with an inset showing formatted Markdown inside Notion and CSV in Google Sheets.
+   - **Overlay Headline:** "Export Clean Reports to Notion, Sheets, or GitHub."

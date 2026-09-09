@@ -1,0 +1,24 @@
+[2026-09-09 10:26:09] local.ERROR: ComparisonService: [groq] Raw output failed JSON parse. {"raw_content_preview":"{
+  \"comparisonTitle\": \"Smart Flairedge vs Lenovo IdeaPad Slim 5 for Graphics and Video Making under 70,000 BDT\",
+  \"comparisonType\": \"Laptop\",
+  \"goal\": \"best for graphics and video making under 70000tk\",
+  \"items\": [
+    {
+      \"id\": \"3aacb6dc-457c-49a5-adbd-8b947d83669f\",
+      \"displayName\": \"Smart Flairedge Intel Core i7 1255U Laptop\",
+      \"shortDescription\": \"Intel Core i7 1255U, 8GB RAM, 512GB SSD, FHD+ WUXGA display, price 68,500 BDT\"
+    },
+    {
+      \"id\": \"8612ddd5-55be-4d82-8e99-","raw_content_tail":"y\",
+      \"importance\": \"high\",
+      \"values\": [
+        {
+          \"itemId\": \"3aacb6dc-457c-49a5-adbd-8b947d83669f\",
+          \"value\": \"FHD+ WUXGA\",
+          \"confidence\": \"high\"
+        },
+        {
+          \"itemId\": \"8612ddd5-55be-4d82-8e99-b161e793fdf4\",
+          \"value\": \"16\\\" WUXGA IPS ","json_error":"State mismatch (invalid or malformed JSON)"} 
+[2026-09-09 10:26:09] local.WARNING: ComparisonService: Primary provider [groq] failed. {"error":"[groq] Response is not valid JSON: No error"} 
+[2026-09-09 10:26:09] local.INFO: ComparisonService: Retrying Groq with openai/gpt-oss-20b...  
