@@ -14,12 +14,15 @@ type Status = 'init' | 'ready' | 'extracting' | 'comparing' | 'error'
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function isBrowserInternalUrl(url: string | undefined): boolean {
   if (!url) return true
+  const lower = url.toLowerCase().trim()
   return (
-    url.startsWith('chrome://') ||
-    url.startsWith('chrome-extension://') ||
-    url.startsWith('edge://') ||
-    url.startsWith('about:') ||
-    url.startsWith('moz-extension://')
+    lower.startsWith('chrome://') ||
+    lower.startsWith('chrome-extension://') ||
+    lower.startsWith('edge://') ||
+    lower.startsWith('about:') ||
+    lower.startsWith('moz-extension://') ||
+    lower.startsWith('view-source:') ||
+    lower.startsWith('devtools://')
   )
 }
 
@@ -35,7 +38,7 @@ export default function Popup() {
   const isBrowserPage = isBrowserInternalUrl(currentTab?.url)
   const isDuplicate = !isBrowserPage && !!currentTab?.url && pages.some((p) => p.url === currentTab.url)
   const isAtMax = pages.length >= 4
-  const canAdd = !isBrowserPage && !isDuplicate && !isAtMax && status !== 'extracting'
+  const canAdd = !isBrowserPage && !isDuplicate && !isAtMax && status !== 'extracting' && status !== 'comparing'
 
   // ── Init ─────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -71,7 +74,37 @@ export default function Popup() {
 
   // ── Add current page ─────────────────────────────────────────────────────
   const handleAddPage = useCallback(async () => {
-    if (!currentTab?.id || !canAdd) return
+    if (!currentTab?.id) return
+
+    if (isBrowserPage) {
+      setErrorMsg('Browser system pages (chrome://, edge://) cannot be added.')
+      setStatus('error')
+      setTimeout(() => {
+        setStatus('ready')
+        setErrorMsg('')
+      }, 4000)
+      return
+    }
+
+    if (pages.some((p) => p.url === currentTab.url)) {
+      setErrorMsg('This page is already in your comparison.')
+      setStatus('error')
+      setTimeout(() => {
+        setStatus('ready')
+        setErrorMsg('')
+      }, 4000)
+      return
+    }
+
+    if (pages.length >= 4) {
+      setErrorMsg('Maximum 4 pages reached.')
+      setStatus('error')
+      setTimeout(() => {
+        setStatus('ready')
+        setErrorMsg('')
+      }, 4000)
+      return
+    }
 
     setStatus('extracting')
     setErrorMsg('')
@@ -84,6 +117,18 @@ export default function Popup() {
 
       const snapshot = results[0]?.result
       if (!snapshot) throw new Error('Extractor returned no data.')
+
+      // Double-check duplicates against storage state
+      const { pages: currentPages } = await getState()
+      if (currentPages.some((p) => p.url === snapshot.url)) {
+        setErrorMsg('This page is already in your comparison.')
+        setStatus('error')
+        setTimeout(() => {
+          setStatus('ready')
+          setErrorMsg('')
+        }, 4000)
+        return
+      }
 
       const updated = await addPage(snapshot)
       setPages(updated)
@@ -98,7 +143,7 @@ export default function Popup() {
         setErrorMsg('')
       }, 4000)
     }
-  }, [currentTab, canAdd])
+  }, [currentTab, isBrowserPage, pages])
 
   // ── Remove a page ────────────────────────────────────────────────────────
   const handleRemove = useCallback(async (id: string) => {
@@ -154,8 +199,9 @@ export default function Popup() {
   function addButtonLabel(): string {
     if (status === 'extracting') return 'Extracting page…'
     if (status === 'comparing') return 'Comparing pages…'
+    if (isBrowserPage) return 'Cannot add system page'
     if (isAtMax) return 'Maximum 4 pages reached'
-    if (isDuplicate) return 'Already added ✓'
+    if (isDuplicate) return 'Already in comparison ✓'
     return '+ ADD TO COMPARISON'
   }
 
@@ -207,32 +253,36 @@ export default function Popup() {
             <span>{errorMsg}</span>
           </div>
         )}
+        {isBrowserPage && (
+          <div className="alert alert-info">
+            <span>🔒</span>
+            <span>Browser system pages (chrome://, edge://) cannot be added.</span>
+          </div>
+        )}
         {isDuplicate && !isBrowserPage && (
           <div className="alert alert-warning">
             <span>⚠️</span>
-            <span>This page is already in your comparison list.</span>
+            <span>This page is already in your comparison.</span>
           </div>
         )}
 
         {/* ── Add Button ──────────────────────────────────────────────── */}
-        {!isBrowserPage && (
-          <button
-            id="add-to-comparison-btn"
-            className={addButtonClass()}
-            onClick={handleAddPage}
-            disabled={!canAdd || status === 'comparing'}
-            aria-label="Add current page to comparison"
-          >
-            {status === 'extracting' || status === 'comparing' ? (
-              <>
-                <span className="spinner" />
-                {status === 'extracting' ? 'Extracting page…' : 'Comparing pages…'}
-              </>
-            ) : (
-              addButtonLabel()
-            )}
-          </button>
-        )}
+        <button
+          id="add-to-comparison-btn"
+          className={addButtonClass()}
+          onClick={handleAddPage}
+          disabled={!canAdd}
+          aria-label="Add current page to comparison"
+        >
+          {status === 'extracting' || status === 'comparing' ? (
+            <>
+              <span className="spinner" />
+              {status === 'extracting' ? 'Extracting page…' : 'Comparing pages…'}
+            </>
+          ) : (
+            addButtonLabel()
+          )}
+        </button>
       </div>
 
       {/* ── Page List ───────────────────────────────────────────────────── */}

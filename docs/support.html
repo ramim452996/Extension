@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support & FAQ - Compare Anything – AI Web Comparison</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background-color: var(--bg);
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    .header p {
+      margin: 0.5rem 0 0;
+      opacity: 0.9;
+      font-size: 1rem;
+    }
+    .container {
+      max-width: 800px;
+      margin: -2rem auto 3rem;
+      padding: 0 1.5rem;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.35rem;
+      color: #0f172a;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 0.4rem;
+    }
+    h2:first-of-type {
+      margin-top: 0;
+    }
+    .faq-item {
+      margin-bottom: 1.5rem;
+    }
+    .faq-question {
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 1.05rem;
+      margin-bottom: 0.25rem;
+    }
+    .faq-answer {
+      color: #475569;
+      font-size: 0.975rem;
+    }
+    .btn-contact {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background-color 0.2s;
+    }
+    .btn-contact:hover {
+      background: var(--primary-dark);
+    }
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Help & Support</h1>
+    <p>Compare Anything – AI Web Comparison</p>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h2>Frequently Asked Questions (FAQ)</h2>
+
+      <div class="faq-item">
+        <div class="faq-question">1. Why do I see "Not stated" in some comparison cells?</div>
+        <div class="faq-answer">
+          Compare Anything is engineered with strict <strong>zero-hallucination</strong> rules. If a product warranty, specific price tier, or qualification requirement is not explicitly written on the page you added, the AI is instructed never to guess or make assumptions. It reports "Not stated" to keep your data 100% trustworthy.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">2. Can I compare more than 4 pages at once?</div>
+        <div class="faq-answer">
+          Currently, Compare Anything is optimized for 2 to 4 pages. This guarantees optimal readability on standard laptop screens and keeps AI token processing well within rapid response limits (under 5 seconds).
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">3. Why does the extension say "Cannot compare Chrome internal pages"?</div>
+        <div class="faq-answer">
+          Due to Chrome browser security policies, extensions are not permitted to inspect internal URLs such as <code>chrome://settings</code>, <code>chrome://extensions</code>, or the Chrome Web Store gallery itself. Simply navigate to any standard web page (e.g., e-commerce, documentation, blogs) to add tabs.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">4. Does Compare Anything see my private account data or passwords?</div>
+        <div class="faq-answer">
+          No. Password fields, hidden forms, and login tokens are ignored during page text extraction. Furthermore, Compare Anything only extracts text when you explicitly click "Add Current Tab". It does not run background listeners on other tabs.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">5. Can I export my comparison?</div>
+        <div class="faq-answer">
+          Yes! At the top right of your comparison results view, click either <strong>"Copy Markdown"</strong> or <strong>"Export CSV"</strong> to immediately copy or download the side-by-side data into Notion, Google Sheets, Excel, or GitHub.
+        </div>
+      </div>
+
+      <h2>Troubleshooting & Bug Reports</h2>
+      <p>
+        If you experience an unexpected error or want to suggest an improvement, please report it through our open-source issue tracker on GitHub:
+      </p>
+      <p style="margin-top: 1.5rem;">
+        <a href="https://github.com/ramim452996/Extension/issues" class="btn-contact" target="_blank" rel="noopener noreferrer">
+          Open an Issue on GitHub &rarr;
+        </a>
+      </p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>&copy; 2026 Compare Anything. Released under the MIT License.</p>
+    <p><a href="privacy-policy.html">Privacy Policy</a> | <a href="index.html">Product Home</a></p>
+  </div>
+
+</body>
+</html>

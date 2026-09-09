@@ -1,6 +1,52 @@
 import { useEffect, useState } from 'react'
 import { copyAsMarkdown, downloadCSV } from '../utils/export'
 
+// ── Render Protection Helpers ──────────────────────────────────────────────────
+function isMissingOrInvalid(val: unknown): boolean {
+  if (val === undefined || val === null) return true
+  if (typeof val === 'number' && Number.isNaN(val)) return true
+  if (typeof val === 'string') {
+    const lower = val.trim().toLowerCase()
+    return (
+      lower === '' ||
+      lower === 'nan' ||
+      lower === 'null' ||
+      lower === 'undefined' ||
+      lower === 'not stated' ||
+      lower === 'none' ||
+      lower === 'n/a'
+    )
+  }
+  return false
+}
+
+function safeText(val: unknown, fallback = 'Not stated'): string {
+  if (isMissingOrInvalid(val)) return fallback
+  if (typeof val === 'object') {
+    try {
+      return JSON.stringify(val)
+    } catch {
+      return fallback
+    }
+  }
+  return String(val)
+}
+
+function renderFallbackMuted(text = 'Not stated') {
+  return (
+    <span className="inline-block text-xs font-medium text-gray-500 bg-gray-800/80 px-2 py-0.5 rounded border border-gray-700/50">
+      {text}
+    </span>
+  )
+}
+
+function renderValue(value: unknown) {
+  if (isMissingOrInvalid(value)) {
+    return renderFallbackMuted('Not stated')
+  }
+  return <span className="break-words whitespace-normal leading-relaxed">{safeText(value)}</span>
+}
+
 export default function Results() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -16,8 +62,8 @@ export default function Results() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-900 text-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+      <div className="flex h-screen items-center justify-center bg-gray-950 text-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     )
   }
@@ -25,7 +71,7 @@ export default function Results() {
   // Handle Error States
   if (!data) {
     return (
-      <div className="flex flex-col h-screen items-center justify-center bg-gray-900 text-white p-8 text-center">
+      <div className="flex flex-col h-screen items-center justify-center bg-gray-950 text-white p-8 text-center">
         <span className="text-4xl mb-4">⚠️</span>
         <h1 className="text-2xl font-bold mb-2">No Comparison Data Found</h1>
         <p className="text-gray-400">Please start a new comparison from the extension popup.</p>
@@ -34,15 +80,14 @@ export default function Results() {
   }
 
   if (data.error) {
-    // Determine user-friendly error message based on Day 4 spec
-    let errorMsg = 'Comparison couldn\'t be generated. Please try again.'
+    let errorMsg = "Comparison couldn't be generated. Please try again."
     if (data.status === 429) {
       errorMsg = "Today's free comparison limit has been reached. Please try again later."
     } else if (data.status === 503) {
-      errorMsg = "Compare Anything is temporarily unavailable."
+      errorMsg = 'Compare Anything is temporarily unavailable.'
     }
     return (
-      <div className="flex flex-col h-screen items-center justify-center bg-gray-900 text-white p-8 text-center">
+      <div className="flex flex-col h-screen items-center justify-center bg-gray-950 text-white p-8 text-center">
         <span className="text-4xl mb-4">❌</span>
         <h1 className="text-2xl font-bold mb-2">Error Generating Comparison</h1>
         <p className="text-red-400 max-w-md">{errorMsg}</p>
@@ -50,34 +95,38 @@ export default function Results() {
     )
   }
 
-  const renderValue = (value: any) => {
-    if (value === undefined || value === null || Number.isNaN(value) || value === 'Not stated' || value === '') {
-      return <span className="text-xs font-medium text-gray-500 bg-gray-800 px-2 py-1 rounded-md">Not stated</span>
-    }
-    return <span>{String(value)}</span>
-  }
+  const items = Array.isArray(data.items) ? data.items : []
+  const criteria = Array.isArray(data.criteria) ? data.criteria : []
+  const itemCount = items.length || 2
+  // Table minWidth: 2 items -> 720px, 3 items -> 880px, 4 items -> 1060px
+  const tableMinWidth = Math.max(700, itemCount * 210 + 220)
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 p-8 font-sans">
+    <div className="min-h-screen bg-gray-950 text-gray-100 p-6 md:p-8 font-sans">
       <div className="max-w-6xl mx-auto space-y-8">
         
-        <header className="flex justify-between items-end border-b border-gray-800 pb-4">
-          <div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-              {data.comparisonTitle}
+        {/* Header */}
+        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-800 pb-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 break-words">
+              {safeText(data.comparisonTitle, 'Comparison Results')}
             </h1>
-            <p className="text-gray-400 mt-1">Goal: {data.goal || 'Objective Comparison'}</p>
+            <p className="text-sm text-gray-400 break-words">
+              <span className="font-semibold text-gray-300">Goal:</span> {safeText(data.goal, 'Objective Comparison')}
+            </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 shrink-0">
             <button 
               onClick={() => copyAsMarkdown(data)}
               className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors border border-gray-700"
+              title="Copy comparison as formatted Markdown"
             >
               📋 Copy Markdown
             </button>
             <button 
               onClick={() => downloadCSV(data)}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
+              title="Download comparison as CSV"
             >
               📥 Download CSV
             </button>
@@ -86,48 +135,101 @@ export default function Results() {
 
         {/* Best Overall */}
         {data.bestOverall && (
-          <section className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 border border-purple-500/30 rounded-xl p-6">
+          <section className="bg-gradient-to-br from-blue-900/30 via-gray-900 to-purple-900/30 border border-purple-500/30 rounded-xl p-6 shadow-lg">
             <h2 className="text-xl font-semibold flex items-center gap-2 mb-3">
               <span>🏆</span> Best Overall
             </h2>
-            <div className="space-y-1">
-              <p className="font-bold text-lg text-blue-300">
-                {data.items.find((i: any) => i.id === data.bestOverall.itemId)?.displayName}
+            <div className="space-y-1.5">
+              <p className="font-bold text-lg text-blue-300 break-words">
+                {data.bestOverall.itemId
+                  ? safeText(
+                      items.find((i: any) => i.id === data.bestOverall.itemId)?.displayName || data.bestOverall.itemId,
+                      'Selected Winner'
+                    )
+                  : 'No Single Winner (Tied or Insufficient Data)'}
               </p>
-              <p className="text-gray-300">{data.bestOverall.reason}</p>
+              <p className="text-gray-300 break-words leading-relaxed text-sm">
+                {safeText(data.bestOverall.reason, 'No detailed evaluation rationale provided.')}
+              </p>
             </div>
           </section>
         )}
 
-        {/* Criteria Matrix */}
-        <section className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        {/* Best For (if provided) */}
+        {Array.isArray(data.bestFor) && data.bestFor.length > 0 && (
+          <section className="bg-gray-900 rounded-xl border border-gray-800 p-6 shadow-md">
+            <h3 className="font-semibold text-lg mb-4 text-gray-200 flex items-center gap-2">
+              <span>🎯</span> Best For Specific Needs
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {data.bestFor.map((bf: any, i: number) => {
+                const item = items.find((it: any) => it.id === bf.itemId)
+                const itemLabel = safeText(item?.displayName || bf.itemId, 'Item')
+                const label = safeText(bf.label, 'Recommendation')
+                const reason = safeText(bf.reason, 'Recommended based on stated specs.')
+                return (
+                  <div key={i} className="bg-gray-800/40 border border-gray-700/50 rounded-lg p-4 space-y-1.5">
+                    <span className="text-[11px] uppercase tracking-wider text-blue-400 font-semibold">{label}</span>
+                    <p className="font-medium text-white break-words text-sm">{itemLabel}</p>
+                    <p className="text-xs text-gray-400 break-words leading-relaxed">{reason}</p>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Criteria Matrix with Responsive Table & Horizontal Scroll Fallback */}
+        <section className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table 
+              className="w-full text-left border-collapse table-auto"
+              style={{ minWidth: `${tableMinWidth}px` }}
+            >
               <thead>
-                <tr className="bg-gray-800/50">
-                  <th className="p-4 font-semibold text-gray-300 border-b border-gray-700 w-1/4">Criteria</th>
-                  {data.items.map((item: any) => (
-                    <th key={item.id} className="p-4 font-semibold text-gray-300 border-b border-gray-700">
-                      {item.displayName}
+                <tr className="bg-gray-800/60 border-b border-gray-700">
+                  <th className="p-4 font-semibold text-gray-300 w-1/4 min-w-[180px] max-w-[240px] align-bottom">
+                    Criteria
+                  </th>
+                  {items.map((item: any) => (
+                    <th key={item.id} className="p-4 font-semibold text-gray-200 border-l border-gray-800/80 min-w-[180px] align-bottom">
+                      <div className="font-bold text-base text-gray-100 break-words whitespace-normal leading-snug">
+                        {safeText(item.displayName, 'Item')}
+                      </div>
+                      {!isMissingOrInvalid(item.shortDescription) && (
+                        <p className="text-xs font-normal text-gray-400 mt-1 line-clamp-2 break-words">
+                          {safeText(item.shortDescription)}
+                        </p>
+                      )}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
-                {data.criteria.map((c: any, idx: number) => (
+                {criteria.map((c: any, idx: number) => (
                   <tr key={idx} className="hover:bg-gray-800/30 transition-colors">
-                    <td className="p-4 align-top">
-                      <div className="font-medium text-gray-200">{c.name}</div>
-                      <div className="text-xs text-gray-500 mt-1 uppercase tracking-wider">{c.importance} importance</div>
+                    <td className="p-4 align-top w-1/4 min-w-[180px] max-w-[240px]">
+                      <div className="font-medium text-gray-200 break-words whitespace-normal leading-snug">
+                        {safeText(c.name, 'Criterion')}
+                      </div>
+                      <div className="text-[11px] text-gray-500 mt-1 uppercase tracking-wider font-semibold">
+                        {safeText(c.importance, 'medium')} importance
+                      </div>
                     </td>
-                    {data.items.map((item: any) => {
-                      const valObj = c.values.find((v: any) => v.itemId === item.id)
-                      const isWinner = c.winnerItemIds?.includes(item.id)
+                    {items.map((item: any) => {
+                      const valObj = c.values?.find((v: any) => v.itemId === item.id)
+                      const isWinner = Array.isArray(c.winnerItemIds) && c.winnerItemIds.includes(item.id)
                       return (
-                        <td key={item.id} className="p-4 align-top">
-                          <div className={`flex flex-col gap-1 ${isWinner ? 'text-green-400 font-medium' : 'text-gray-300'}`}>
-                            {isWinner && <span className="text-[10px] uppercase tracking-wider text-green-500/80 font-bold">Winner</span>}
-                            {renderValue(valObj?.value)}
+                        <td key={item.id} className="p-4 align-top border-l border-gray-800/80 min-w-[180px]">
+                          <div className={`flex flex-col gap-1.5 ${isWinner ? 'text-green-300 font-medium' : 'text-gray-300'}`}>
+                            {isWinner && (
+                              <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-green-400 font-bold bg-green-950/60 border border-green-700/40 rounded px-1.5 py-0.5 w-fit">
+                                <span>✓</span> Winner
+                              </span>
+                            )}
+                            <div className="break-words whitespace-normal leading-relaxed text-sm">
+                              {renderValue(valObj?.value)}
+                            </div>
                           </div>
                         </td>
                       )
@@ -141,34 +243,43 @@ export default function Results() {
 
         {/* Differences & Missing Info Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {data.keyDifferences?.length > 0 && (
-            <section className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+          {Array.isArray(data.keyDifferences) && data.keyDifferences.length > 0 && (
+            <section className="bg-gray-900 rounded-xl border border-gray-800 p-6 shadow-md">
               <h3 className="font-semibold text-lg mb-4 text-gray-200 flex items-center gap-2">
                 <span>🔍</span> Key Differences
               </h3>
-              <ul className="space-y-2 text-gray-400">
-                {data.keyDifferences.map((diff: string, i: number) => (
+              <ul className="space-y-2.5 text-gray-300 text-sm">
+                {data.keyDifferences.map((diff: any, i: number) => (
                   <li key={i} className="flex gap-2">
-                    <span className="text-blue-500">•</span>
-                    <span>{diff}</span>
+                    <span className="text-blue-500 font-bold">•</span>
+                    <span className="break-words leading-relaxed">{safeText(diff, 'Not stated')}</span>
                   </li>
                 ))}
               </ul>
             </section>
           )}
 
-          {data.missingInformation?.length > 0 && (
-            <section className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+          {Array.isArray(data.missingInformation) && data.missingInformation.length > 0 && (
+            <section className="bg-gray-900 rounded-xl border border-gray-800 p-6 shadow-md">
               <h3 className="font-semibold text-lg mb-4 text-gray-200 flex items-center gap-2">
                 <span>⚠️</span> Missing Information
               </h3>
-              <ul className="space-y-3 text-gray-400">
+              <ul className="space-y-3 text-sm">
                 {data.missingInformation.map((mi: any, i: number) => {
-                  const item = data.items.find((it: any) => it.id === mi.itemId)
+                  const item = items.find((it: any) => it.id === mi.itemId)
+                  const itemLabel = safeText(item?.displayName || mi.itemId, 'Item')
+                  const fieldsList = Array.isArray(mi.fields)
+                    ? mi.fields
+                        .map((f: any) => safeText(f, ''))
+                        .filter((f: string) => f.length > 0 && f !== 'Not stated')
+                    : []
+                  const fieldsContent = fieldsList.length > 0 ? fieldsList.join(', ') : 'Not stated'
                   return (
                     <li key={i} className="flex gap-2">
-                      <span className="text-amber-500 font-bold">{item?.displayName}:</span>
-                      <span className="text-gray-500">{mi.fields.join(', ')}</span>
+                      <span className="text-amber-500 font-bold shrink-0">{itemLabel}:</span>
+                      <span className="text-gray-400 break-words leading-relaxed">
+                        {fieldsContent === 'Not stated' ? renderFallbackMuted('Not stated') : fieldsContent}
+                      </span>
                     </li>
                   )
                 })}
@@ -181,3 +292,4 @@ export default function Results() {
     </div>
   )
 }
+

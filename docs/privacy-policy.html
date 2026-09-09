@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - Compare Anything – AI Web Comparison</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background-color: var(--bg);
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    .header p {
+      margin: 0.5rem 0 0;
+      opacity: 0.9;
+      font-size: 1rem;
+    }
+    .container {
+      max-width: 800px;
+      margin: -2rem auto 3rem;
+      padding: 0 1.5rem;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border);
+    }
+    h2 {
+      font-size: 1.35rem;
+      color: #0f172a;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 0.4rem;
+    }
+    h2:first-of-type {
+      margin-top: 0;
+    }
+    p, li {
+      color: #334155;
+      font-size: 1rem;
+    }
+    ul {
+      padding-left: 1.25rem;
+    }
+    li {
+      margin-bottom: 0.5rem;
+    }
+    .badge-highlight {
+      display: inline-block;
+      background: #e0e7ff;
+      color: #4338ca;
+      font-weight: 600;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+    .callout {
+      background: #f0fdf4;
+      border-left: 4px solid #22c55e;
+      padding: 1rem 1.25rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.5rem 0;
+    }
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Privacy Policy</h1>
+    <p>Compare Anything – AI Web Comparison</p>
+    <p style="font-size: 0.85rem; margin-top: 4px;">Effective Date: September 9, 2026 | Version 1.0.0</p>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <div class="callout">
+        <strong>Our Core Privacy Promise:</strong> We only process the specific web pages you explicitly choose to add. We do not track your browsing history, run background trackers, sell your information, or store your data long-term.
+      </div>
+
+      <h2>1. Overview and Single Purpose</h2>
+      <p>
+        <strong>Compare Anything</strong> is a browser productivity extension designed solely to provide side-by-side comparison tables of 2 to 4 user-selected browser tabs. This Privacy Policy details what minimal data is handled when you use the extension and how your privacy is protected at every step.
+      </p>
+
+      <h2>2. Information We Access and Process</h2>
+      <ul>
+        <li>
+          <strong>Explicitly Selected Webpage Content:</strong> When you click <em>"Add Current Tab"</em>, the extension temporarily reads the visible text, title, and URL of that tab. We do <strong>not</strong> read tabs you do not select.
+        </li>
+        <li>
+          <strong>Comparison Priorities:</strong> If you choose to enter custom priority text (such as "Focus on pricing" or "Must have USB-C"), that text is processed along with the page content.
+        </li>
+        <li>
+          <strong>Local Extension Storage:</strong> Your local preferences (such as your backend endpoint URL and optional saved comparisons) are stored locally in your browser via <code>chrome.storage.local</code>. This data never leaves your computer unless you initiate a comparison request.
+        </li>
+      </ul>
+
+      <h2>3. Information We Do NOT Collect</h2>
+      <ul>
+        <li>❌ <strong>No Browsing History:</strong> We do not monitor URLs you visit, search terms, or bookmarks.</li>
+        <li>❌ <strong>No Personal Identifying Information (PII):</strong> We do not require an account, email address, name, or phone number.</li>
+        <li>❌ <strong>No Keystroke Logging or Background Scraping:</strong> The extension content script runs strictly on-demand.</li>
+        <li>❌ <strong>No Form Autocomplete / Passwords:</strong> We strip form inputs, authentication tokens, cookies, and hidden session fields.</li>
+        <li>❌ <strong>No Ad Tracking or Cross-Site Analytics:</strong> We do not embed third-party analytics (e.g., Google Analytics, Mixpanel, or Facebook Pixel).</li>
+      </ul>
+
+      <h2>4. Chrome Permissions Justification</h2>
+      <p>To adhere to the principle of least privilege, Compare Anything only requests the minimal permissions required to function:</p>
+      <ul>
+        <li><span class="badge-highlight">activeTab</span>: Enables the extension to access the title and URL of the active tab only when you interact with the extension popup.</li>
+        <li><span class="badge-highlight">scripting</span>: Executes the on-demand text extraction script inside the active tab to retrieve visible content when you click "Add Current Tab".</li>
+        <li><span class="badge-highlight">storage</span>: Stores your local configuration and recent comparison history within your browser sandbox.</li>
+      </ul>
+
+      <h2>5. How Data is Sent to AI Providers</h2>
+      <p>
+        When you click <strong>"Compare Tabs"</strong>, the extracted text from your selected pages and your priority prompt are sent securely via TLS/HTTPS to our stateless backend proxy. 
+        The proxy securely forwards the prompt to Groq Cloud for language inference under enterprise API zero-retention guidelines.
+      </p>
+      <ul>
+        <li>The backend operates statelessly: data is processed in memory and returned immediately.</li>
+        <li>Data is <strong>not</strong> used to train AI models.</li>
+        <li>Data is <strong>not</strong> shared with third-party advertising networks or data brokers.</li>
+      </ul>
+
+      <h2>6. Data Retention and Security</h2>
+      <p>
+        Extracted content is stored in your local browser memory only while the popup or comparison view is open. 
+        Once you clear your comparison or close the extension, that ephemeral data is discarded. 
+        Any cached comparisons stored via <code>chrome.storage.local</code> can be erased at any time by clicking "Clear History" or uninstalling the extension.
+      </p>
+
+      <h2>7. Children's Privacy</h2>
+      <p>
+        Compare Anything is a general productivity tool and does not knowingly collect or solicit data from children under the age of 13.
+      </p>
+
+      <h2>8. Updates to This Policy</h2>
+      <p>
+        We may update this Privacy Policy from time to time. Any changes will be posted to this page with an updated Effective Date.
+      </p>
+
+      <h2>9. Contact & Support</h2>
+      <p>
+        If you have any questions, feedback, or privacy concerns regarding Compare Anything, please open an issue or reach out via our support page:
+      </p>
+      <p>
+        GitHub Repository: <a href="https://github.com/ramim452996/Extension" target="_blank" rel="noopener noreferrer">https://github.com/ramim452996/Extension</a><br>
+        Support Page: <a href="support.html">support.html</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>&copy; 2026 Compare Anything. Released under the MIT License.</p>
+  </div>
+
+</body>
+</html>

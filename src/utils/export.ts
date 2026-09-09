@@ -10,11 +10,13 @@ export function copyAsMarkdown(comparison: any): void {
 
   // Quick Verdict (Best Overall)
   if (comparison.bestOverall) {
-    const bestItem = comparison.items.find((i: any) => i.id === comparison.bestOverall.itemId)
+    const bestItem = comparison.items?.find((i: any) => i.id === comparison.bestOverall.itemId)
     if (bestItem) {
       markdown += `## 🏆 Best Overall: ${bestItem.displayName}\n`
-      markdown += `*${comparison.bestOverall.reason}*\n\n`
+    } else {
+      markdown += `## 🏆 Best Overall: No Single Winner\n`
     }
+    markdown += `*${comparison.bestOverall.reason}*\n\n`
   }
 
   // Best For...

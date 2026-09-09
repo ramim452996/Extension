@@ -11,7 +11,7 @@ export default function PageInfo({ currentTab, isBrowserPage }: PageInfoProps) {
       {isBrowserPage ? (
         <div className="alert alert-info">
           <span>🔒</span>
-          <span>Extensions can't access browser internal pages.</span>
+          <span>Browser system pages (chrome://, edge://) cannot be added to comparisons.</span>
         </div>
       ) : currentTab ? (
         <div>
