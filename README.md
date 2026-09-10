@@ -1,4 +1,8 @@
-# Compare Anything: Stop switching between tabs. Compare them.
+# Compare Anything
+
+> Stop switching between tabs. Compare them.
+
+![Compare Anything Screenshot](docs/screenshot.png)
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-v1.0.0-blue?logo=googlechrome)](https://github.com/ramim452996/Extension)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome)](https://developer.chrome.com/docs/extensions/mv3/intro/)
@@ -7,6 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > **Compare Anything** is a Manifest V3 browser extension and high-speed backend API that lets you snapshot 2 to 4 open browser tabs, enter your personal priorities, and generate an instant, side-by-side comparative breakdown based **strictly on page text with zero AI hallucination**.
+
 
 ---
 
