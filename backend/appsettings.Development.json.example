@@ -1,0 +1,31 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "Cors": {
+    "AllowedOrigins": [
+      "chrome-extension://YOUR_EXTENSION_ID"
+    ]
+  },
+  "AIProvider": {
+    "DefaultProvider": "Groq",
+    "Groq": {
+      "ApiKey": "YOUR_GROQ_API_KEY_HERE",
+      "Endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "Model": "openai/gpt-oss-20b"
+    },
+    "OpenRouter": {
+      "ApiKey": "YOUR_OPENROUTER_API_KEY_HERE",
+      "Endpoint": "https://openrouter.ai/api/v1/chat/completions",
+      "Model": "openai/gpt-oss-20b"
+    }
+  },
+  "RateLimiting": {
+    "DailyPerInstall": 10,
+    "HourlyPerIp": 30
+  }
+}
