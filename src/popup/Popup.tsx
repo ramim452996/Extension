@@ -271,7 +271,7 @@ export default function Popup() {
           </p>
           <div className="flex items-center justify-between pt-1 border-t border-indigo-500/20">
             <a
-              href="https://ramim452996.github.io/compare-backend/privacy-policy.html"
+              href="https://ramim452996.github.io/Extension/privacy-policy.html"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[10px] text-indigo-300 hover:text-white underline"
@@ -357,12 +357,21 @@ export default function Popup() {
         <div className="text-[10px] text-white/30 text-center">
           Pages accessed only on your click &bull;{' '}
           <a
-            href="https://ramim452996.github.io/compare-backend/privacy-policy.html"
+            href="https://ramim452996.github.io/Extension/privacy-policy.html"
             target="_blank"
             rel="noopener noreferrer"
             className="text-white/40 hover:text-white/70 underline"
           >
-            Privacy Policy
+            Privacy
+          </a>
+          {' '}&bull;{' '}
+          <a
+            href="https://ramim452996.github.io/Extension/support.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/40 hover:text-white/70 underline"
+          >
+            Support
           </a>
         </div>
       </div>
