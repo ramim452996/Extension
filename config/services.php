@@ -51,4 +51,12 @@ return [
         'endpoint' => 'https://openrouter.ai/api/v1/chat/completions',
     ],
 
+    // ── Rate Limiting & Protection ────────────────────────────────────────────
+
+    'rate_limit' => [
+        'daily_per_install'  => (int) env('RATE_LIMIT_DAILY_PER_INSTALL', 10),
+        'hourly_per_ip'      => (int) env('RATE_LIMIT_HOURLY_PER_IP', 30),
+        'max_text_chars'     => (int) env('MAX_TEXT_CHARS_PER_PAGE', 5000),
+    ],
+
 ];

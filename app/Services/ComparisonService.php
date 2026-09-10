@@ -405,7 +405,74 @@ PROMPT;
             ];
         }
 
-        // importantDifferences compatibility
+        // Build comparisonTable { criteria: [...], options: [{ title, values }] } for full API schema parity
+        if (!isset($result['comparisonTable'])) {
+            $critNames = [];
+            $optionsList = [];
+            $critList = $result['criteria'] ?? [];
+            foreach ($critList as $c) {
+                $critNames[] = $c['name'] ?? 'Criterion';
+            }
+
+            foreach ($payload['pages'] as $p) {
+                $pid = $p['id'];
+                $optTitle = $itemNames[$pid] ?? $p['title'];
+                $optValues = [];
+                foreach ($critList as $c) {
+                    $foundVal = 'Not stated';
+                    if (isset($c['values']) && is_array($c['values'])) {
+                        foreach ($c['values'] as $v) {
+                            if (($v['itemId'] ?? '') === $pid) {
+                                $foundVal = $v['value'] ?? 'Not stated';
+                                break;
+                            }
+                        }
+                    }
+                    $optValues[] = $foundVal;
+                }
+                $optionsList[] = [
+                    'title'  => $optTitle,
+                    'values' => $optValues,
+                ];
+            }
+
+            $result['comparisonTable'] = [
+                'criteria' => $critNames,
+                'options'  => $optionsList,
+            ];
+        }
+
+        // bestForRecommendations compatibility
+        if (!isset($result['bestForRecommendations'])) {
+            $result['bestForRecommendations'] = $result['bestFor'] ?? [];
+        }
+        if (!isset($result['bestFor'])) {
+            $result['bestFor'] = $result['bestForRecommendations'];
+        }
+
+        // bestOverall compatibility (provides itemId, reason, optionTitle, winner, rationale)
+        if (!isset($result['bestOverall']) || !is_array($result['bestOverall'])) {
+            $result['bestOverall'] = [
+                'itemId'      => null,
+                'reason'      => 'Balanced trade-offs across options; no single overall winner.',
+                'rationale'   => 'Balanced trade-offs across options; no single overall winner.',
+                'optionTitle' => 'No Single Winner (Tied / Incomparable Trade-offs)',
+                'winner'      => 'No Single Winner (Tied / Incomparable Trade-offs)',
+            ];
+        } else {
+            $boItemId = $result['bestOverall']['itemId'] ?? null;
+            $boTitle = $boItemId ? ($itemNames[$boItemId] ?? $boItemId) : 'No Single Winner (Tied / Incomparable Trade-offs)';
+            $result['bestOverall']['optionTitle'] = $boTitle;
+            $result['bestOverall']['winner'] = $boTitle;
+            if (!isset($result['bestOverall']['rationale'])) {
+                $result['bestOverall']['rationale'] = $result['bestOverall']['reason'] ?? '';
+            }
+            if (!isset($result['bestOverall']['reason'])) {
+                $result['bestOverall']['reason'] = $result['bestOverall']['rationale'];
+            }
+        }
+
+        // importantDifferences and keyDifferences compatibility
         if (!isset($result['importantDifferences'])) {
             $result['importantDifferences'] = $result['keyDifferences'] ?? [];
         }
@@ -413,14 +480,21 @@ PROMPT;
             $result['keyDifferences'] = $result['importantDifferences'];
         }
 
-        // bestFor list formatting
-        if (isset($result['bestFor']) && is_array($result['bestFor'])) {
-            foreach ($result['bestFor'] as &$bf) {
-                if (isset($bf['itemId']) && !isset($bf['winner'])) {
-                    $bf['winner'] = $itemNames[$bf['itemId']] ?? $bf['itemId'];
+        // missingInformation compatibility (ensures array of strings or objects)
+        if (isset($result['missingInformation']) && is_array($result['missingInformation'])) {
+            $formattedMissing = [];
+            foreach ($result['missingInformation'] as $mi) {
+                if (is_string($mi)) {
+                    $formattedMissing[] = $mi;
+                } elseif (is_array($mi)) {
+                    $mName = $itemNames[$mi['itemId'] ?? ''] ?? ($mi['itemId'] ?? 'Item');
+                    $mFields = isset($mi['fields']) && is_array($mi['fields']) ? implode(', ', $mi['fields']) : 'Key specifications';
+                    $formattedMissing[] = "{$mName}: {$mFields} not stated on source page.";
                 }
             }
-            unset($bf);
+            if (!empty($formattedMissing) && !isset($result['missingInformationStrings'])) {
+                $result['missingInformationStrings'] = $formattedMissing;
+            }
         }
 
         return $result;

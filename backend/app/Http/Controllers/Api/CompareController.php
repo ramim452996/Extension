@@ -58,21 +58,45 @@ class CompareController extends Controller
             $request->merge($data);
         }
 
-        // ── 2. Validate request payload ───────────────────────────────────────
+        // ── 2. Validate request payload & enforce limits ─────────────────────
+        $maxChars = config('services.rate_limit.max_text_chars', 5000);
+
         $validated = $request->validate([
             'installId'              => ['required', 'string', 'max:255'],
             'goal'                   => ['nullable', 'string', 'max:300'],
             'userPriority'           => ['nullable', 'string', 'max:300'],
             'pages'                  => ['required', 'array', 'min:2', 'max:4'],
             'pages.*.id'             => ['nullable', 'string'],
-            'pages.*.url'            => ['required', 'url'],
+            'pages.*.url'            => ['required', 'url', 'regex:/^https?:\/\//i'],
             'pages.*.domain'         => ['nullable', 'string'],
-            'pages.*.title'          => ['required', 'string'],
-            'pages.*.importantText'  => ['nullable', 'string'],
-            'pages.*.content'        => ['nullable', 'string'],
+            'pages.*.title'          => ['required', 'string', 'max:500'],
+            'pages.*.importantText'  => ['nullable', 'string', "max:{$maxChars}"],
+            'pages.*.content'        => ['nullable', 'string', "max:{$maxChars}"],
         ]);
 
-        // ── 2. Reject duplicate URLs ──────────────────────────────────────────
+        // Sanitize and normalize URLs (strip credentials, fragments, control characters)
+        foreach ($validated['pages'] as &$p) {
+            $parsed = filter_var($p['url'], FILTER_SANITIZE_URL);
+            $parts = parse_url($parsed);
+            if (empty($parts['scheme']) || !in_array(strtolower($parts['scheme']), ['http', 'https'], true)) {
+                throw ValidationException::withMessages([
+                    'pages' => ['Only valid HTTP/HTTPS URLs can be compared.'],
+                ]);
+            }
+            // Strip any auth credentials or fragments
+            $sanitizedUrl = $parts['scheme'] . '://' . ($parts['host'] ?? '');
+            if (!empty($parts['port'])) {
+                $sanitizedUrl .= ':' . $parts['port'];
+            }
+            $sanitizedUrl .= ($parts['path'] ?? '/');
+            if (!empty($parts['query'])) {
+                $sanitizedUrl .= '?' . $parts['query'];
+            }
+            $p['url'] = $sanitizedUrl;
+        }
+        unset($p);
+
+        // ── 3. Reject duplicate URLs ──────────────────────────────────────────
         $urls = array_column($validated['pages'], 'url');
         if (count($urls) !== count(array_unique($urls))) {
             throw ValidationException::withMessages([
@@ -80,25 +104,29 @@ class CompareController extends Controller
             ]);
         }
 
-        // ── 3. Rate limiting ──────────────────────────────────────────────────
+        // ── 4. Rate limiting (Per install & per IP) ───────────────────────────
         $installId = $validated['installId'];
         $ip        = $request->ip();
 
-        // 10 requests per installId per 24 hours
-        $dailyKey      = "compare:daily:{$installId}";
-        $dailyLimit    = 10;
+        // Configurable limits (default: 10/day per installation, 30/hour per IP)
+        $dailyLimit        = config('services.rate_limit.daily_per_install', 10);
         $dailyDecaySeconds = 24 * 60 * 60;
+        $dailyKey          = "compare:daily:{$installId}";
 
-        // 30 requests per IP per hour
-        $hourlyKey     = "compare:hourly:{$ip}";
-        $hourlyLimit   = 30;
+        $hourlyLimit        = config('services.rate_limit.hourly_per_ip', 30);
         $hourlyDecaySeconds = 60 * 60;
+        $hourlyKey          = "compare:hourly:{$ip}";
 
         if (RateLimiter::tooManyAttempts($dailyKey, $dailyLimit)) {
             $seconds = RateLimiter::availableIn($dailyKey);
 
+            logger()->info('CompareController: Daily limit reached', [
+                'installIdHash' => hash('sha256', $installId),
+                'retryAfter'    => $seconds,
+            ]);
+
             return response()->json([
-                'message'    => 'Daily comparison limit reached. You may run up to 10 comparisons per 24 hours.',
+                'message'     => "Today's free comparison limit has been reached. Please try again later.",
                 'retry_after' => $seconds,
             ], 429);
         }
@@ -106,8 +134,13 @@ class CompareController extends Controller
         if (RateLimiter::tooManyAttempts($hourlyKey, $hourlyLimit)) {
             $seconds = RateLimiter::availableIn($hourlyKey);
 
+            logger()->info('CompareController: Hourly IP limit reached', [
+                'ipHash'     => hash('sha256', $ip),
+                'retryAfter' => $seconds,
+            ]);
+
             return response()->json([
-                'message'    => 'Hourly rate limit exceeded. Please wait before comparing again.',
+                'message'     => "Today's free comparison limit has been reached. Please try again later.",
                 'retry_after' => $seconds,
             ], 429);
         }
@@ -116,15 +149,48 @@ class CompareController extends Controller
         RateLimiter::hit($dailyKey,  $dailyDecaySeconds);
         RateLimiter::hit($hourlyKey, $hourlyDecaySeconds);
 
-        // ── 4. Generate comparison ────────────────────────────────────────────
+        // ── 5. Generate comparison with safe telemetry logging ────────────────
+        // Requirements: NEVER log raw page content, private page data, or user text.
+        // Allowed: RequestId, InstallId hash, NumberOfPages, Duration, AI provider, Model, Success/failure, HTTP status.
+        $requestId = (string) \Illuminate\Support\Str::uuid();
+        $startTime = microtime(true);
+        $activeProvider = config('services.ai_provider', 'groq');
+        $activeModel = config("services.{$activeProvider}.model", 'default');
+
         try {
             $result = $this->comparisonService->generateComparison($validated);
+            $durationMs = (int) round((microtime(true) - $startTime) * 1000);
+
+            logger()->info('Comparison request completed', [
+                'requestId'     => $requestId,
+                'installIdHash' => hash('sha256', $installId),
+                'numberOfPages' => count($validated['pages']),
+                'durationMs'    => $durationMs,
+                'aiProvider'    => $activeProvider,
+                'model'         => $activeModel,
+                'status'        => 'success',
+                'httpStatus'    => 200,
+            ]);
+
+            return response()->json($result, 200);
         } catch (\RuntimeException $e) {
+            $durationMs = (int) round((microtime(true) - $startTime) * 1000);
+
+            logger()->error('Comparison request failed', [
+                'requestId'     => $requestId,
+                'installIdHash' => hash('sha256', $installId),
+                'numberOfPages' => count($validated['pages']),
+                'durationMs'    => $durationMs,
+                'aiProvider'    => $activeProvider,
+                'model'         => $activeModel,
+                'status'        => 'failure',
+                'httpStatus'    => 503,
+                'errorSummary'  => $e->getMessage(),
+            ]);
+
             return response()->json([
                 'message' => $e->getMessage(),
             ], 503);
         }
-
-        return response()->json($result, 200);
     }
 }
