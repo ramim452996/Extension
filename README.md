@@ -1,4 +1,8 @@
-# Compare Anything: Stop switching between tabs. Compare them.
+# Compare Anything
+
+> Stop switching between tabs. Compare them.
+
+![Compare Anything Screenshot](docs/screenshot.png)
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-v1.0.0-blue?logo=googlechrome)](https://github.com/ramim452996/Extension)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-success?logo=googlechrome)](https://developer.chrome.com/docs/extensions/mv3/intro/)
@@ -7,6 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > **Compare Anything** is a Manifest V3 browser extension and high-speed backend API that lets you snapshot 2 to 4 open browser tabs, enter your personal priorities, and generate an instant, side-by-side comparative breakdown based **strictly on page text with zero AI hallucination**.
+
 
 ---
 
@@ -244,4 +249,26 @@ Compare Anything adheres strictly to Google Chrome's **Single Purpose** and **Mi
 
 ## 📄 License
 
-This project is open source and available under the [MIT License](LICENSE).
+```text
+MIT License
+
+Copyright (c) 2026 Compare Anything
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
