@@ -10,265 +10,215 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **Compare Anything** is a Manifest V3 browser extension and high-speed backend API that lets you snapshot 2 to 4 open browser tabs, enter your personal priorities, and generate an instant, side-by-side comparative breakdown based **strictly on page text with zero AI hallucination**.
+---
 
+## 📖 Table of Contents
+1. [What It Does](#-what-it-does)
+2. [Architecture & Technical Flow](#-architecture--technical-flow)
+3. [Repository Structure](#-repository-structure)
+4. [Installation & Setup](#-installation--setup)
+5. [Local Development](#-local-development)
+6. [Environment Variables](#-environment-variables)
+7. [Privacy Approach](#-privacy-approach)
+8. [Contributors](#-contributors)
+9. [License](#-license)
 
 ---
 
-## 🎯 Table of Contents
-1. [Core Features](#-core-features)
-2. [Why Compare Anything?](#-why-compare-anything)
-3. [Architecture & Zero-Hallucination Engine](#-architecture--zero-hallucination-engine)
-4. [Repository Structure](#-repository-structure)
-5. [Local Development Setup](#-local-development-setup)
-   - [Backend Service (Laravel / PHP 8.2+)](#1-backend-service-laravel--php-82)
-   - [Chrome Extension (React + Vite + TypeScript)](#2-chrome-extension-react--vite--typescript)
-6. [Testing & Quality Verification](#-testing--quality-verification)
-7. [Chrome Web Store Packaging](#-chrome-web-store-packaging)
-8. [Privacy & Security Approach](#-privacy--security-approach)
-9. [Documentation & Live Links](#-documentation--live-links)
-10. [License](#-license)
+## ⚡ What It Does
+
+**Compare Anything** delivers 5-second product value: eliminate endless tab-switching by instantly generating a structured, side-by-side comparative breakdown across 2 to 4 open webpages.
+
+- **Multi-Tab Comparison:** Works seamlessly with 2–4 open tabs across any domain—consumer hardware, SaaS subscription plans, job postings, course curricula, and academic programs.
+- **Custom Goals & Priorities:** Allows users to specify target constraints (e.g., *"Best for programming under Tk 80,000"* or *"Remote work with equity"*), factoring them directly into the winner analysis.
+- **Strictly Evidence-Based:** Extracts facts directly from source HTML without guessing or hallucinating missing specs; any unstated detail is strictly labeled `"Not stated"`.
+- **Structured Decision Outputs:** Provides an analytical, Google Flights–style matrix with Best Overall recommendation cards, tailored trade-offs, and source links.
+- **Instant Export Actions:** One-click Markdown copy for Notion/GitHub and RFC-4180 compliant CSV download for Google Sheets and Excel.
 
 ---
 
-## 🚀 Core Features
+## 🏗️ Architecture & Technical Flow
 
-- **Side-by-Side Comparison Matrix:** Compare 2, 3, or 4 tabs across dynamically synthesized criteria (pricing, specifications, terms, features, pros, and cons).
-- **Strict Zero-Hallucination Standard:** If a detail, warranty, or price is not explicitly printed in the extracted page snapshot, the system outputs `"Not stated"`. It never approximates or fabricates values.
-- **Custom Priority Weighting:** Specify your primary constraints (e.g., *"Budget under $1,000"*, *"Must have free tier"*, *"Remote work only"*) to receive tailored winner verdicts and trade-off analyses.
-- **Objective Winner Determination:** Highlights a justified `bestOverall` item with trade-off insights, or marks it `null` when items are tied or evidence is insufficient.
-- **One-Click Export:** Download or copy your comparison matrix as structured **Markdown** or **CSV** for Notion, Google Sheets, or GitHub issues.
-- **Lightweight & Fast:** Uses Groq Cloud inference to return complete structured comparisons in under 5 seconds.
-- **Privacy-First:** Operates strictly on-demand. No background browsing tracking, no analytics telemetry, and zero user data retention.
+Compare Anything follows a decoupled, security-first two-tier architecture:
 
----
-
-## 💡 Why Compare Anything?
-
-When researching purchases, evaluating software, or looking for jobs, users often juggle 10+ tabs, manually switching back and forth while trying to remember fine-print differences. 
-
-Existing AI tools either:
-1. Hallucinate missing features based on stale training data, or
-2. Require users to manually copy-paste thousands of words into chat windows.
-
-**Compare Anything** bridges this gap: with a single click, it extracts clean, visible DOM text from your selected tabs, passes it through a secure backend proxy, and renders an organized matrix directly in your browser.
-
----
-
-## 🏗️ Architecture & Zero-Hallucination Engine
-
-```
-┌────────────────────────────────────────────────────────┐
-│               Google Chrome (Manifest V3)              │
-│                                                        │
-│  [Tab 1]      [Tab 2]      [Tab 3]      [Tab 4]        │
-│     │            │            │            │           │
-│     └────────────┴──────┬─────┴────────────┘           │
-│                         ▼                              │
-│       Content Script: Clean DOM Text Extractor         │
-│                         │                              │
-│                         ▼                              │
-│       React + TypeScript Extension Popup UI            │
-└─────────────────────────┬──────────────────────────────┘
-                          │ HTTPS / TLS (POST /api/compare)
-                          ▼
-┌────────────────────────────────────────────────────────┐
-│                   Secure Backend API                   │
-│                                                        │
-│  - Untrusted data sanitization (<PAGE_DATA> blocks)    │
-│  - Prompt injection protection                         │
-│  - Strict JSON schema enforcement                      │
-│  - Groq API Key isolation (never exposed to client)   │
-└─────────────────────────┬──────────────────────────────┘
-                          │ High-Throughput Inference
-                          ▼
-┌────────────────────────────────────────────────────────┐
-│                      Groq Cloud                        │
-│            (openai/gpt-oss-20b / compound-mini)        │
-│          Zero-retention factual comparison             │
-└────────────────────────────────────────────────────────┘
+```text
+[Browser Tabs (2-4 Pages)] ──> [Chrome Extension (React + Vite)] ──(HTTPS)──> [ASP.NET Core Web API (IAIProvider)] ──> [Groq (openai/gpt-oss-20b)]
 ```
 
-### The 4 Truth Rules Enforced by the Backend
-1. **Direct Textual Evidence:** Every claim must have explicit grounding in the page text.
-2. **"Not Stated" Guarantee:** Omitted specs receive `"Not stated"`—never an educated guess.
-3. **No General Knowledge Contamination:** Pre-training assumptions about standard battery sizes, default warranties, or typical pricing are forbidden.
-4. **Honest Refusal:** If pages lack sufficient data to declare a winner, `bestOverall.itemId` is set to `null` with a transparent explanation.
+### Core Tiers:
+1. **Frontend (Chrome Extension):**
+   - Built on **Manifest V3**, **TypeScript**, **React**, and **Vite**.
+   - Operates with minimal permissions (`activeTab`, `scripting`, `storage`).
+   - Content scripts extract visible text only when explicitly invoked by the user.
+   - Maintains comparison workspace state client-side in `chrome.storage.local`.
+2. **Backend (Web API Proxy):**
+   - **ASP.NET Core 10 Web API** acts as a strict security boundary.
+   - Encapsulates inference behind the `IAIProvider` interface (supporting Groq and OpenRouter).
+   - Zero AI provider keys, tokens, or backend credentials are ever included in client bundles.
+   - Enforces rate limiting, input character truncation, URL sanitization, and structured JSON output schemas.
 
 ---
 
 ## 📁 Repository Structure
 
-```
+```text
 .
-├── SPEC.md                      # Full product & architectural specification
-├── README.md                    # Project documentation (this file)
-├── .gitignore                   # Strict exclusion for .env, node_modules, dist, *.zip
-├── docs/                        # Public pages & submission documentation
-│   ├── index.html               # Responsive landing page (Section 43)
-│   ├── implementation-plan.md   # Detailed execution plan (Section 47)
-│   ├── privacy-policy.html      # Chrome Web Store compliant privacy policy
-│   └── support.html             # User support & FAQ guide
-├── store-assets/                # Chrome Web Store publishing package
-│   ├── listing-metadata.md      # Title, 132-char summary, and store copy
-│   └── icon128.png              # 128x128 extension icon
-├── extension/                   # Manifest V3 Chrome Extension
-│   ├── manifest.json            # MV3 manifest with minimal permissions
-│   ├── package.json             # React, Vite, TypeScript dependencies
-│   ├── vite.config.ts           # Extension multi-page build configuration
-│   ├── tsconfig.json            # Strict TypeScript configuration
-│   └── src/
-│       ├── background/          # Background service worker
-│       ├── content/             # DOM text & snapshot extractor
-│       ├── popup/               # React popup UI (tabs, priorities, results)
-│       ├── services/            # Backend API communication layer
-│       ├── types/               # Strict comparison TypeScript types
-│       └── utils/               # Markdown/CSV exporters & formatters
-└── app/                         # Backend Service (Laravel API)
-    ├── Http/Controllers/       # ComparisonController (POST /api/compare)
-    └── Services/                # ComparisonService (Groq integration)
+├── SPEC.md                                   # Comprehensive engineering & UI specification
+├── README.md                                 # Project documentation (this file)
+├── LICENSE                                   # MIT License
+├── .gitignore                                # Strict secrets and build artifact exclusions
+├── docs/                                     # Public GitHub Pages site & submission guides
+│   ├── index.html                            # Lightweight, responsive landing page (Section 43)
+│   ├── privacy-policy.html                   # Chrome Web Store compliant privacy policy
+│   ├── support.html                          # User support, contact, and FAQ guide
+│   ├── chrome-store-submission.md            # Web Store metadata and screenshot checklist
+│   └── screenshot.png                        # Primary UI preview asset (1280x800)
+├── extension/                                # Frontend Manifest V3 extension
+│   ├── .env.example                          # Extension environment variables template
+│   ├── manifest.json                         # Chrome MV3 manifest
+│   ├── src/
+│   │   ├── popup/                            # Extension toolbar popup (React + Tailwind)
+│   │   ├── results/                          # Analytical comparison matrix screen
+│   │   ├── content/extractor.ts              # Visible text content extractor
+│   │   ├── services/api.ts                   # HTTPS client communication with backend
+│   │   └── storage/compareStorage.ts         # chrome.storage.local state manager
+├── backend/                                  # Backend API service
+│   ├── appsettings.Development.json.example  # ASP.NET Core local settings template
+│   └── ...                                   # Web API endpoints, IAIProvider, and controllers
+└── store-assets/                             # Packaged submission archive & visual tiles
+    └── compare-anything-v1.0.0.zip           # Production ZIP for Chrome Web Store
 ```
 
 ---
 
-## 💻 Local Development Setup
+## 📥 Installation & Setup
 
-### 1. Backend Service (Laravel / PHP 8.2+)
+Follow these steps to load Compare Anything unpacked in Google Chrome:
 
-The backend securely stores the Groq API key and provides the `/api/compare` endpoint.
-
+### 1. Clone the Repository
 ```bash
-# 1. Clone the repository
-git clone https://github.com/ramim452996/compare-backend.git
-cd compare-backend
-
-# 2. Install PHP dependencies
-composer install
-
-# 3. Configure environment variables
-cp .env.example .env
-# Edit .env and set your GROQ_API_KEY:
-# GROQ_API_KEY=gsk_your_groq_api_key_here
-
-# 4. Start the development server
-php artisan serve --port=8000
-# Backend will be available at: http://127.0.0.1:8000/api/compare
+git clone https://github.com/ramim452996/Extension.git
+cd Extension
 ```
 
-### 2. Chrome Extension (React + Vite + TypeScript)
-
+### 2. Build the Extension
 ```bash
-# 1. Navigate to the extension directory
 cd extension
-
-# 2. Install Node dependencies
 npm install
-
-# 3. Build the extension bundle
 npm run build
-# Production artifacts will be compiled into extension/dist/
 ```
+This generates the optimized production bundle in `extension/dist` with detached source maps.
 
-### 3. Load the Extension into Google Chrome
-
-1. Open Google Chrome and navigate to `chrome://extensions`.
-2. Toggle on **"Developer mode"** in the top-right corner.
-3. Click **"Load unpacked"**.
-4. Select the `extension/dist` folder.
-5. The **Compare Anything** icon will appear in your Chrome toolbar!
+### 3. Load Unpacked in Chrome
+1. Open Google Chrome and navigate to `chrome://extensions/`.
+2. Toggle **Developer mode** in the top right corner.
+3. Click the **Load unpacked** button in the top left.
+4. Select the `extension/dist` directory.
+5. Pin **Compare Anything** to your Chrome toolbar.
 
 ---
 
-## 🧪 Testing & Quality Verification
+## 💻 Local Development
 
-### Run Extension Type Checks & Production Build
+### 1. Frontend Extension (Vite Hot-Reload)
 ```bash
 cd extension
-npm run type-check   # Verifies TypeScript without compilation errors
-npm run build        # Generates production bundle in dist/
+npm install
+npm run dev
 ```
+Vite will start the development watcher and compile files with hot module replacement.
 
-### Test Backend Comparison Endpoint
+### 2. Backend Web API (ASP.NET Core 10)
 ```bash
-curl -X POST http://127.0.0.1:8000/api/compare \
-  -H "Content-Type: application/json" \
-  -d '{
-    "pages": [
-      {
-        "id": "item-1",
-        "title": "MacBook Air M3",
-        "url": "https://apple.com/macbook-air",
-        "text": "MacBook Air with M3 chip. 8-core CPU, 10-core GPU. Up to 18 hours battery life. Liquid Retina display. Price: $1,099."
-      },
-      {
-        "id": "item-2",
-        "title": "Dell XPS 13",
-        "url": "https://dell.com/xps-13",
-        "text": "Dell XPS 13 Laptop. Intel Core Ultra 7 processor. 16GB LPDDR5x RAM. Up to 14 hours battery life. Price: $1,299."
-      }
-    ],
-    "userPriority": "Best battery life and lowest price"
-  }'
+cd backend
+dotnet run
 ```
+The API server starts locally at `https://localhost:7001` (or your configured port).
 
 ---
 
-## 📦 Chrome Web Store Packaging
+## 🔐 Environment Variables
 
-To create a clean, store-ready ZIP archive:
+Configure your local development environment using the clean templates provided in the repository:
 
+### 1. Configure the Backend API
+Copy `backend/appsettings.Development.json.example` to `backend/appsettings.Development.json`:
 ```bash
-# From the repository root:
-php -r '$zip = new ZipArchive(); $zip->open("store-assets/compare-anything-extension.zip", ZipArchive::CREATE | ZipArchive::OVERWRITE); $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator("extension/dist")); foreach ($files as $file) { if (!$file->isDir()) { $filePath = $file->getRealPath(); $relPath = substr($filePath, strlen(realpath("extension/dist")) + 1); $zip->addFile($filePath, str_replace("\\", "/", $relPath)); } } $zip->close();'
+cp backend/appsettings.Development.json.example backend/appsettings.Development.json
 ```
 
+Sample configuration (`backend/appsettings.Development.json`):
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "Cors": {
+    "AllowedOrigins": [
+      "chrome-extension://YOUR_EXTENSION_ID"
+    ]
+  },
+  "AIProvider": {
+    "DefaultProvider": "Groq",
+    "Groq": {
+      "ApiKey": "YOUR_GROQ_API_KEY_HERE",
+      "Endpoint": "https://api.groq.com/openai/v1/chat/completions",
+      "Model": "openai/gpt-oss-20b"
+    },
+    "OpenRouter": {
+      "ApiKey": "YOUR_OPENROUTER_API_KEY_HERE",
+      "Endpoint": "https://openrouter.ai/api/v1/chat/completions",
+      "Model": "openai/gpt-oss-20b"
+    }
+  },
+  "RateLimiting": {
+    "DailyPerInstall": 10,
+    "HourlyPerIp": 30
+  }
+}
+```
+
+### 2. Configure the Frontend Extension
+Copy `extension/.env.example` to `extension/.env`:
+```bash
+cp extension/.env.example extension/.env
+```
+
+Sample configuration (`extension/.env`):
+```bash
+# Backend API Base URL
+VITE_API_BASE_URL=https://localhost:7001
+```
+
+> [!CAUTION]
+> **Security Rule:** Never commit `.env`, `appsettings.Development.json`, or real API keys to version control. Both are strictly blocked by the repository [`.gitignore`](.gitignore).
+
 ---
 
-## 🛡️ Privacy & Security Approach
+## 🛡️ Privacy Approach
 
-Compare Anything adheres strictly to Google Chrome's **Single Purpose** and **Minimal Privilege** policies:
+Compare Anything was designed from the ground up to respect user privacy:
 
-- **Minimal Permissions:** Only `activeTab`, `scripting`, and `storage` are requested.
-- **On-Demand Execution:** Content scripts are injected only when the user explicitly clicks "Add Current Tab".
-- **Zero Credentials in Client:** No Groq API keys are bundled into the extension.
-- **No Browsing History:** The extension does not record, log, or transmit URLs outside of explicitly added tabs.
-- **Zero Model Training:** Data passed through Groq APIs is never retained or used to train public models.
+- **Explicit Action Only:** Webpages are only read when you explicitly click **"+ Add to Comparison"**. The extension never inspects tabs running in the background.
+- **Zero Browsing Tracking:** Does not access browsing history, search queries, stored cookies, or session tokens.
+- **Client-Side State Storage:** Added comparison tabs, custom criteria, and cached results are kept locally in `chrome.storage.local` and are completely wiped when you click **"Clear Comparison"** or **"Start New"**.
+- **Stateless Backend:** The API server processes page snapshots ephemerally in-memory to generate the comparison matrix and discards the text immediately after delivery. No user page text or URLs are saved to any remote database.
 
 ---
 
-## 🌐 Documentation & Live Links
+## 👥 Contributors
 
-- **Landing Page:** [`docs/index.html`](docs/index.html)
-- **Privacy Policy:** [`docs/privacy-policy.html`](docs/privacy-policy.html)
-- **Support & FAQ:** [`docs/support.html`](docs/support.html)
-- **Chrome Web Store Metadata:** [`store-assets/listing-metadata.md`](store-assets/listing-metadata.md)
-- **Specification Document:** [`SPEC.md`](SPEC.md)
-- **Implementation Plan:** [`docs/implementation-plan.md`](docs/implementation-plan.md)
+- **Compare Anything Contributors** ([@ramim452996](https://github.com/ramim452996))
+
+We welcome pull requests and issue reports to help make web comparison faster, cleaner, and more transparent!
 
 ---
 
 ## 📄 License
 
-```text
-MIT License
-
-Copyright (c) 2026 Compare Anything
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+This project is open-source and released under the terms of the [MIT License](LICENSE).  
+Copyright (c) 2026 Compare Anything Contributors.
