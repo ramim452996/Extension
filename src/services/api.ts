@@ -57,3 +57,38 @@ export async function fetchComparison(
     throw new ApiError(503, 'Compare Anything is temporarily unavailable. Please ensure the backend is running.')
   }
 }
+
+/**
+ * Send an anonymous product metric event.
+ * Never throws, never logs URLs or full page text.
+ */
+export async function sendAnalyticsEvent(
+  event: 'extension_installed' | 'comparison_started' | 'comparison_completed' | 'comparison_error',
+  meta: {
+    installId?: string
+    numberOfPages?: number
+    category?: string
+    durationMs?: number
+    errorCode?: string
+  } = {}
+): Promise<void> {
+  try {
+    await fetch(`${API_BASE_URL}/analytics/event`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        event,
+        installId: meta.installId,
+        numberOfPages: meta.numberOfPages,
+        category: meta.category,
+        durationMs: meta.durationMs,
+        errorCode: meta.errorCode,
+      }),
+    })
+  } catch {
+    // Analytics failures must never interrupt user workflow
+  }
+}

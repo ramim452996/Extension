@@ -151,22 +151,27 @@
         <li><span class="badge-highlight">storage</span>: Stores your local configuration and recent comparison history within your browser sandbox.</li>
       </ul>
 
-      <h2>5. How Data is Sent to AI Providers</h2>
+      <h2>5. How Data is Transmitted and Used by AI Providers</h2>
       <p>
-        When you click <strong>"Compare Tabs"</strong>, the extracted text from your selected pages and your priority prompt are sent securely via TLS/HTTPS to our stateless backend proxy. 
-        The proxy securely forwards the prompt to Groq Cloud for language inference under enterprise API zero-retention guidelines.
+        When you click <strong>"Compare Pages"</strong>, the relevant extracted text from the webpages you explicitly added and your optional priority criteria are securely transmitted to our backend server and our AI inference provider (Groq Cloud / OpenRouter).
       </p>
       <ul>
-        <li>The backend operates statelessly: data is processed in memory and returned immediately.</li>
-        <li>Data is <strong>not</strong> used to train AI models.</li>
-        <li>Data is <strong>not</strong> shared with third-party advertising networks or data brokers.</li>
+        <li><strong>User-Initiated Action Only:</strong> Webpages and their text content are accessed <em>only</em> after your direct, explicit action (clicking "Add to Comparison" / "Compare"). The extension never scrapes tabs in the background.</li>
+        <li><strong>Relevant Extracted Content:</strong> Only relevant visible page text (titles, headings, pricing, product specifications, table contents) is extracted and transmitted. Raw unnecessary assets, images, code scripts, passwords, cookies, and authentication headers are excluded.</li>
+        <li><strong>Purpose of Transmission:</strong> Data is transmitted solely to synthesize and generate your side-by-side comparison matrix.</li>
+        <li><strong>Designated AI Providers:</strong> Extracted text is processed via enterprise AI endpoints (such as Groq Cloud and OpenRouter) for fast LLM inference.</li>
+        <li><strong>Strict Single Purpose:</strong> Content is used strictly to produce your comparison analysis. It is never used to train or fine-tune AI foundation models.</li>
+        <li><strong>Zero Data Monetization:</strong> Your data is <strong>not sold</strong>, rented, or traded to any third parties or data brokers.</li>
+        <li><strong>No Advertising:</strong> Your extracted data is never used for targeting, marketing, or advertising purposes.</li>
+        <li><strong>No Permanent Storage of Raw Content:</strong> Raw page text is processed statelessly in-memory by our backend and is <strong>not permanently stored</strong> on our servers or databases.</li>
+        <li><strong>No Human Review:</strong> Humans do not routinely review, inspect, or monitor the extracted page text or comparison inputs.</li>
+        <li><strong>Secure HTTPS Transmission:</strong> All communications between the extension, our backend API, and AI providers are encrypted in transit using modern HTTPS / TLS protocols.</li>
       </ul>
 
-      <h2>6. Data Retention and Security</h2>
+      <h2>6. Local Data Retention & Control</h2>
       <p>
-        Extracted content is stored in your local browser memory only while the popup or comparison view is open. 
-        Once you clear your comparison or close the extension, that ephemeral data is discarded. 
-        Any cached comparisons stored via <code>chrome.storage.local</code> can be erased at any time by clicking "Clear History" or uninstalling the extension.
+        Extracted content is stored in your local browser sandbox (<code>chrome.storage.local</code>) solely so you can view and manipulate your comparison. 
+        You can erase this local data at any time by clicking "Clear Comparison", clearing extension storage, or uninstalling the extension.
       </p>
 
       <h2>7. Children's Privacy</h2>

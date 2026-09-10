@@ -6,7 +6,7 @@ import PageInfo from './components/PageInfo'
 import PageList from './components/PageList'
 import GoalInput from './components/GoalInput'
 import CompareButton from './components/CompareButton'
-import { fetchComparison, ApiError } from '../services/api'
+import { fetchComparison, sendAnalyticsEvent, ApiError } from '../services/api'
 
 // ── Status ────────────────────────────────────────────────────────────────────
 type Status = 'init' | 'ready' | 'extracting' | 'comparing' | 'error'
@@ -33,6 +33,7 @@ export default function Popup() {
   const [currentTab, setCurrentTab] = useState<CurrentTab | null>(null)
   const [status, setStatus] = useState<Status>('init')
   const [errorMsg, setErrorMsg] = useState('')
+  const [hasSeenPrivacyNotice, setHasSeenPrivacyNotice] = useState<boolean>(true)
 
   // ── Derived state ────────────────────────────────────────────────────────
   const isBrowserPage = isBrowserInternalUrl(currentTab?.url)
@@ -47,6 +48,13 @@ export default function Popup() {
       const state = await getState()
       setPages(state.pages)
       setGoalState(state.goal)
+
+      const stored = await chrome.storage.local.get(['hasSeenPrivacyNotice'])
+      if (stored.hasSeenPrivacyNotice === undefined || stored.hasSeenPrivacyNotice === false) {
+        setHasSeenPrivacyNotice(false)
+      } else {
+        setHasSeenPrivacyNotice(true)
+      }
 
       // Get installId (should be set by background script or generated on init)
       // Since it's required for the API, ensure it exists in state
@@ -175,6 +183,12 @@ export default function Popup() {
       const state = await getState()
       const installId = state.installId || 'fallback-install-id'
 
+      // Fire non-blocking anonymous product metric
+      sendAnalyticsEvent('comparison_started', {
+        installId,
+        numberOfPages: pages.length,
+      })
+
       const result = await fetchComparison(installId, goal, pages)
       
       // Save result to storage
@@ -245,6 +259,38 @@ export default function Popup() {
       {/* ── Current Page Info ────────────────────────────────────────────── */}
       <PageInfo currentTab={currentTab} isBrowserPage={isBrowserPage} />
 
+      {/* ── First-Use Privacy Disclosure Notice ─────────────────────────── */}
+      {!hasSeenPrivacyNotice && (
+        <div className="mx-4 mt-3 p-3 rounded-lg bg-indigo-950/70 border border-indigo-500/30 text-left text-xs text-white/90 shadow-lg">
+          <div className="flex items-start gap-2 mb-1.5">
+            <span className="text-base leading-none">🛡️</span>
+            <div className="font-semibold text-indigo-200">How Your Data is Handled</div>
+          </div>
+          <p className="text-[11px] leading-relaxed text-indigo-100/80 mb-2">
+            Compare Anything extracts relevant text from webpages you explicitly add. When you click <strong>Compare</strong>, that extracted information is securely sent via HTTPS to our server and AI provider to generate the comparison.
+          </p>
+          <div className="flex items-center justify-between pt-1 border-t border-indigo-500/20">
+            <a
+              href="https://ramim452996.github.io/compare-backend/privacy-policy.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-indigo-300 hover:text-white underline"
+            >
+              Privacy Policy
+            </a>
+            <button
+              onClick={async () => {
+                await chrome.storage.local.set({ hasSeenPrivacyNotice: true })
+                setHasSeenPrivacyNotice(true)
+              }}
+              className="px-2.5 py-1 text-[10px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Status Alerts ───────────────────────────────────────────────── */}
       <div className="px-4 pt-3 space-y-2">
         {status === 'error' && errorMsg && (
@@ -296,9 +342,9 @@ export default function Popup() {
       {/* ── Compare Button ──────────────────────────────────────────────── */}
       <CompareButton pages={pages} onClick={handleCompare} />
 
-      {/* ── Footer: Clear ───────────────────────────────────────────────── */}
-      {pages.length > 0 && (
-        <div className="px-4 pb-4 flex justify-center">
+      {/* ── Footer: Clear & Privacy ─────────────────────────────────────── */}
+      <div className="px-4 pb-3 pt-1 flex flex-col items-center gap-1.5">
+        {pages.length > 0 && (
           <button
             id="clear-comparison-btn"
             className="clear-btn"
@@ -307,8 +353,19 @@ export default function Popup() {
           >
             Clear Comparison
           </button>
+        )}
+        <div className="text-[10px] text-white/30 text-center">
+          Pages accessed only on your click &bull;{' '}
+          <a
+            href="https://ramim452996.github.io/compare-backend/privacy-policy.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/40 hover:text-white/70 underline"
+          >
+            Privacy Policy
+          </a>
         </div>
-      )}
+      </div>
     </div>
   )
 }

@@ -11,11 +11,26 @@
 chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
     const existing = await chrome.storage.local.get('installId')
-    if (!existing.installId) {
-      // Generate a UUID for anonymous analytics (no PII)
-      const installId = crypto.randomUUID()
+    let installId = existing.installId
+    if (!installId) {
+      // Generate an anonymous UUID (no PII)
+      installId = crypto.randomUUID()
       await chrome.storage.local.set({ installId })
       console.log('[Compare Anything] New install. ID:', installId)
+    }
+
+    // Ping anonymous installation event to backend (best-effort, non-blocking)
+    try {
+      fetch('https://compare-backend.test/api/analytics/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'extension_installed',
+          installId,
+        }),
+      }).catch(() => {})
+    } catch {
+      // Ignore network errors on install
     }
   }
 })

@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Compare Anything – AI Web Comparison | Stop Switching Tabs</title>
-  <meta name="description" content="Compare 2 to 4 open browser tabs side-by-side with zero hallucination. Clear matrix of prices, features, specifications, and trade-offs.">
+  <title>Compare Anything — Stop switching between tabs. Compare them.</title>
+  <meta name="description" content="Compare products, plans, jobs, courses and more with one click. Compare 2 to 4 open browser tabs side-by-side with zero hallucination.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0f19;
-      --surface: #111827;
-      --surface-border: #1f293d;
+      --bg: #090d16;
+      --card-bg: #111827;
+      --card-border: #1f293d;
       --primary: #6366f1;
+      --primary-hover: #4f46e5;
       --primary-glow: rgba(99, 102, 241, 0.25);
-      --accent: #8b5cf6;
       --emerald: #10b981;
       --text: #f3f4f6;
       --text-muted: #94a3b8;
-      --code-bg: #050811;
+      --mono-bg: #050811;
     }
 
     * {
@@ -29,20 +29,23 @@
     }
 
     body {
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg);
       color: var(--text);
       line-height: 1.6;
       overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
 
-    /* Ambient background glows */
+    /* Ambient Lighting */
     .glow-bg {
       position: absolute;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.05) 50%, transparent 70%);
-      top: -100px;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.04) 50%, transparent 70%);
+      top: -150px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 0;
@@ -56,9 +59,10 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      max-width: 1200px;
+      max-width: 1100px;
       margin: 0 auto;
-      padding: 1.5rem 2rem;
+      padding: 1.5rem 1.5rem;
+      width: 100%;
     }
 
     .logo {
@@ -67,13 +71,13 @@
       gap: 0.75rem;
       font-weight: 800;
       font-size: 1.25rem;
-      letter-spacing: -0.02em;
       color: #fff;
       text-decoration: none;
+      letter-spacing: -0.02em;
     }
 
     .logo-badge {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
       color: #fff;
       width: 34px;
       height: 34px;
@@ -81,7 +85,7 @@
       align-items: center;
       justify-content: center;
       border-radius: 8px;
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 700;
       box-shadow: 0 0 15px var(--primary-glow);
     }
@@ -89,7 +93,7 @@
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 1.75rem;
+      gap: 1.5rem;
     }
 
     .nav-links a {
@@ -104,26 +108,22 @@
       color: #fff;
     }
 
-    .nav-links .btn-nav {
-      background: #1e293b;
-      color: #fff;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      border: 1px solid var(--surface-border);
-    }
-
-    .nav-links .btn-nav:hover {
-      background: #334155;
-    }
-
-    /* Hero Section */
-    .hero {
+    /* Main Container */
+    main {
+      flex: 1;
       position: relative;
       z-index: 1;
-      max-width: 960px;
-      margin: 4rem auto 2rem;
-      padding: 0 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+      width: 100%;
+    }
+
+    /* Hero Header */
+    .hero {
       text-align: center;
+      max-width: 850px;
+      margin: 1.5rem auto 3.5rem;
     }
 
     .badge-pill {
@@ -144,17 +144,17 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 8px #10b981;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
     }
 
     .hero h1 {
-      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-size: clamp(2.3rem, 5.5vw, 3.8rem);
       font-weight: 800;
       line-height: 1.15;
-      letter-spacing: -0.03em;
-      margin-bottom: 1.25rem;
+      letter-spacing: -0.035em;
       color: #ffffff;
+      margin-bottom: 1.25rem;
     }
 
     .hero h1 span.gradient {
@@ -163,198 +163,238 @@
       -webkit-text-fill-color: transparent;
     }
 
-    .hero p.lead {
-      font-size: 1.2rem;
+    .hero p.sub-headline {
+      font-size: 1.25rem;
       color: var(--text-muted);
       max-width: 680px;
       margin: 0 auto 2.25rem;
       font-weight: 400;
-    }
-
-    .hero-actions {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-      color: white;
-      padding: 0.85rem 1.85rem;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 1rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      box-shadow: 0 4px 20px var(--primary-glow);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
-    }
-
-    .btn-secondary {
-      background: #131d33;
-      border: 1px solid var(--surface-border);
-      color: #e2e8f0;
-      padding: 0.85rem 1.85rem;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 1rem;
-      transition: background 0.2s;
-    }
-
-    .btn-secondary:hover {
-      background: #1e293b;
-    }
-
-    /* Visual Diagram / Architecture */
-    .section-diagram {
-      max-width: 1060px;
-      margin: 4.5rem auto;
-      padding: 0 1.5rem;
-      position: relative;
-      z-index: 1;
-    }
-
-    .diagram-card {
-      background: var(--surface);
-      border: 1px solid var(--surface-border);
-      border-radius: 16px;
-      padding: 2.5rem;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-    }
-
-    .diagram-title {
-      text-align: center;
-      font-size: 1.35rem;
-      font-weight: 700;
-      margin-bottom: 2rem;
-      color: #fff;
-    }
-
-    .workflow-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.5rem;
-      position: relative;
-    }
-
-    .workflow-step {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--surface-border);
-      border-radius: 12px;
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      position: relative;
-      transition: border-color 0.2s ease;
-    }
-
-    .workflow-step:hover {
-      border-color: var(--primary);
-    }
-
-    .step-num {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      background: rgba(99, 102, 241, 0.2);
-      color: #818cf8;
-      font-weight: 700;
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1rem;
-    }
-
-    .step-title {
-      font-weight: 700;
-      font-size: 1.05rem;
-      margin-bottom: 0.4rem;
-      color: #f1f5f9;
-    }
-
-    .step-desc {
-      font-size: 0.85rem;
-      color: var(--text-muted);
       line-height: 1.5;
     }
 
-    /* Comparison Table Preview */
-    .preview-section {
-      max-width: 1060px;
-      margin: 4.5rem auto;
-      padding: 0 1.5rem;
-      position: relative;
-      z-index: 1;
-    }
-
-    .preview-header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .preview-header h2 {
-      font-size: 2rem;
-      font-weight: 800;
-      color: #fff;
-      margin-bottom: 0.5rem;
-    }
-
-    .table-container {
-      background: var(--surface);
-      border: 1px solid var(--surface-border);
-      border-radius: 14px;
-      overflow: hidden;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-    }
-
-    .table-topbar {
-      background: #0d1322;
-      padding: 1rem 1.5rem;
+    .cta-wrapper {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
+      gap: 1rem;
       align-items: center;
-      border-bottom: 1px solid var(--surface-border);
+      flex-wrap: wrap;
     }
 
-    .tab-indicators {
+    .btn-cta {
+      background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+      color: #ffffff;
+      padding: 0.95rem 2rem;
+      border-radius: 9px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.05rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      box-shadow: 0 4px 20px var(--primary-glow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(99, 102, 241, 0.45);
+    }
+
+    .btn-cta svg {
+      flex-shrink: 0;
+    }
+
+    /* Diagram Section */
+    .diagram-container {
+      margin: 3.5rem auto;
+      max-width: 780px;
+    }
+
+    .diagram-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 2rem;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+      position: relative;
+    }
+
+    .diagram-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #a5b4fc;
+      margin-bottom: 1.25rem;
       display: flex;
+      align-items: center;
       gap: 0.5rem;
     }
 
-    .tab-circle {
-      width: 10px;
-      height: 10px;
+    .ascii-diagram {
+      background: var(--mono-bg);
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.5rem 1.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.05rem;
+      color: #38bdf8;
+      line-height: 1.8;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .ascii-diagram .tag-focus {
+      color: #a855f7;
+      font-weight: 700;
+    }
+
+    .ascii-diagram .decision {
+      color: #34d399;
+      font-weight: 700;
+    }
+
+    /* How It Works */
+    .how-it-works {
+      margin: 4.5rem auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .section-header h2 {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-header p {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .step-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      position: relative;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .step-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .step-card h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    .step-card p {
+      color: var(--text-muted);
+      font-size: 0.925rem;
+      line-height: 1.55;
+    }
+
+    /* Screenshot / Interface Preview */
+    .screenshot-section {
+      margin: 4.5rem auto;
+    }
+
+    .screenshot-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+    }
+
+    .browser-bar {
+      background: #0d1322;
+      padding: 0.85rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 0.45rem;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
     }
-    .c-red { background: #ef4444; }
-    .c-yellow { background: #eab308; }
-    .c-green { background: #22c55e; }
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #eab308; }
+    .dot-green { background: #22c55e; }
 
-    .matrix-table {
+    .browser-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    /* Comparison Table Preview */
+    .table-wrapper {
+      padding: 1.5rem;
+      overflow-x: auto;
+    }
+
+    .comparison-grid {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.9rem;
       text-align: left;
     }
 
-    .matrix-table th, .matrix-table td {
+    .comparison-grid th, 
+    .comparison-grid td {
       padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--surface-border);
+      border-bottom: 1px solid var(--card-border);
     }
 
-    .matrix-table th {
-      background: #151d30;
+    .comparison-grid th {
+      background: #151e33;
       color: #e2e8f0;
       font-weight: 700;
       text-transform: uppercase;
@@ -362,96 +402,81 @@
       letter-spacing: 0.05em;
     }
 
-    .matrix-table tr:last-child td {
+    .comparison-grid tr:last-child td {
       border-bottom: none;
     }
 
-    .matrix-table td.criteria-name {
+    .comparison-grid td.criteria {
       font-weight: 600;
       color: #94a3b8;
       width: 25%;
       background: rgba(15, 23, 42, 0.4);
     }
 
-    .matrix-table td.winner {
+    .comparison-grid td.winner-cell {
       background: rgba(16, 185, 129, 0.05);
       border-left: 2px solid var(--emerald);
     }
 
-    .winner-tag {
+    .badge-winner {
       background: rgba(16, 185, 129, 0.2);
       color: #34d399;
       font-size: 0.7rem;
       font-weight: 700;
-      padding: 2px 6px;
+      padding: 2px 7px;
       border-radius: 4px;
       margin-left: 6px;
       display: inline-block;
     }
 
-    .not-stated {
+    .badge-not-stated {
       color: #64748b;
       font-style: italic;
-    }
-
-    /* Core Highlights */
-    .features-grid {
-      max-width: 1060px;
-      margin: 4.5rem auto;
-      padding: 0 1.5rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .feature-box {
-      background: var(--surface);
-      border: 1px solid var(--surface-border);
-      border-radius: 12px;
-      padding: 1.75rem;
-    }
-
-    .feature-box h3 {
-      font-size: 1.15rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      color: #f8fafc;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .feature-box p {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      line-height: 1.55;
+      background: rgba(100, 116, 139, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
     }
 
     /* Footer */
     footer {
-      border-top: 1px solid var(--surface-border);
-      background: #080b13;
-      padding: 3rem 1.5rem 2rem;
+      border-top: 1px solid var(--card-border);
+      background: #060911;
+      padding: 2.5rem 1.5rem;
       text-align: center;
       color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 0.875rem;
+      margin-top: auto;
     }
 
     .footer-links {
       display: flex;
       justify-content: center;
       gap: 2rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
     }
 
     .footer-links a {
       color: #cbd5e1;
       text-decoration: none;
       font-weight: 500;
+      transition: color 0.2s;
     }
 
     .footer-links a:hover {
       color: #fff;
+    }
+
+    @media (max-width: 640px) {
+      .ascii-diagram {
+        font-size: 0.85rem;
+        padding: 1rem;
+      }
+      nav {
+        flex-direction: column;
+        gap: 1rem;
+      }
     }
   </style>
 </head>
@@ -467,135 +492,146 @@
     </a>
     <div class="nav-links">
       <a href="#how-it-works">How It Works</a>
-      <a href="#preview">Live Preview</a>
-      <a href="privacy-policy.html">Privacy</a>
+      <a href="#screenshot">Preview</a>
+      <a href="privacy-policy.html">Privacy Policy</a>
       <a href="support.html">Support</a>
-      <a href="https://github.com/ramim452996/Extension" target="_blank" rel="noopener noreferrer" class="btn-nav">GitHub &rarr;</a>
     </div>
   </nav>
 
-  <!-- Hero Section -->
-  <header class="hero">
-    <div class="badge-pill">
-      <span></span> Manifest V3 &bull; Zero Hallucination AI
-    </div>
-    <h1>Stop switching between tabs.<br><span class="gradient">Compare them.</span></h1>
-    <p class="lead">
-      Compare products, plans, jobs, courses and more with one click.
-    </p>
-    <div class="hero-actions">
-      <a href="https://github.com/ramim452996/Extension" class="btn-primary" target="_blank" rel="noopener noreferrer">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-        Download Extension (v1.0.0)
-      </a>
-      <a href="#preview" class="btn-secondary">View Sample Matrix</a>
-    </div>
-  </header>
-
-  <!-- Visual Workflow Diagram Matching Section 43 -->
-  <section class="section-diagram" id="how-it-works">
-    <div class="diagram-card">
-      <div class="diagram-title">Tab 1 + Tab 2 + Tab 3 &rarr; Compare Anything &rarr; One Decision</div>
-      <div class="workflow-grid">
-        <div class="workflow-step">
-          <div class="step-num">1</div>
-          <div class="step-title">Add a page</div>
-          <div class="step-desc">Click "+ Add to Comparison" to snapshot visible text from the first open tab.</div>
-        </div>
-        <div class="workflow-step">
-          <div class="step-num">2</div>
-          <div class="step-title">Add another</div>
-          <div class="step-desc">Switch to 1 to 3 other competitor tabs and add them to your comparison workspace.</div>
-        </div>
-        <div class="workflow-step">
-          <div class="step-num">3</div>
-          <div class="step-title">Compare</div>
-          <div class="step-desc">Enter any custom priority constraints and click "Compare" for an instant decision matrix.</div>
-        </div>
+  <!-- Main Content -->
+  <main>
+    <!-- Hero Header strictly following SPEC Section 43 -->
+    <section class="hero">
+      <div class="badge-pill">
+        <span></span> Manifest V3 &bull; AI Side-by-Side Comparison
       </div>
-    </div>
-  </section>
+      <h1>Stop switching between tabs.<br><span class="gradient">Compare them.</span></h1>
+      <p class="sub-headline">
+        Compare products, plans, jobs, courses and more with one click.
+      </p>
+      <div class="cta-wrapper">
+        <a href="https://github.com/ramim452996/Extension" class="btn-cta" target="_blank" rel="noopener noreferrer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 4.5c4.142 0 7.5 3.358 7.5 7.5s-3.358 7.5-7.5 7.5-7.5-3.358-7.5-7.5 3.358-7.5 7.5-7.5zm0 3a4.5 4.5 0 100 9 4.5 4.5 0 000-9z"/>
+          </svg>
+          [ Add to Chrome ]
+        </a>
+      </div>
+    </section>
 
-  <!-- Interactive/Live Matrix Preview -->
-  <section class="preview-section" id="preview">
-    <div class="preview-header">
-      <h2>Side-by-Side Comparison Matrix</h2>
-      <p style="color: var(--text-muted);">Real-world example: SaaS Developer Tools Comparison</p>
-    </div>
+    <!-- Visual Diagram strictly following SPEC Section 43 -->
+    <section class="diagram-container">
+      <div class="diagram-card">
+        <div class="diagram-title">
+          <span>Workflow Overview</span>
+        </div>
+        <pre class="ascii-diagram">
+Tab 1 ──┐
+Tab 2 ──┼──> <span class="tag-focus">COMPARE ANYTHING</span> ──> <span class="decision">One decision</span>
+Tab 3 ──┘</pre>
+      </div>
+    </section>
 
-    <div class="table-container">
-      <div class="table-topbar">
-        <div class="tab-indicators">
-          <div class="tab-circle c-red"></div>
-          <div class="tab-circle c-yellow"></div>
-          <div class="tab-circle c-green"></div>
-        </div>
-        <div style="font-size: 0.8rem; color: #94a3b8; font-family: 'JetBrains Mono', monospace;">
-          compare-anything-matrix.json
-        </div>
+    <!-- "How it works" section (1. Add a page, 2. Add another, 3. Compare) -->
+    <section class="how-it-works" id="how-it-works">
+      <div class="section-header">
+        <h2>How It Works</h2>
+        <p>Three steps from tab overload to clear, structured decision making.</p>
       </div>
 
-      <table class="matrix-table">
-        <thead>
-          <tr>
-            <th>Criteria</th>
-            <th>CloudFlow Pro <span class="winner-tag">Best Overall</span></th>
-            <th>DataPulse Enterprise</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="criteria-name">Monthly Price</td>
-            <td class="winner"><strong>$49 / month</strong> (billed annually)</td>
-            <td>$99 / month (per seat)</td>
-          </tr>
-          <tr>
-            <td class="criteria-name">API Rate Limit</td>
-            <td class="winner">5,000 requests / min</td>
-            <td>2,500 requests / min</td>
-          </tr>
-          <tr>
-            <td class="criteria-name">Free Trial</td>
-            <td>14 days (credit card required)</td>
-            <td class="winner">30 days (no credit card)</td>
-          </tr>
-          <tr>
-            <td class="criteria-name">Dedicated Support SLA</td>
-            <td>24/7 Slack & Email</td>
-            <td class="not-stated">Not stated</td>
-          </tr>
-          <tr>
-            <td class="criteria-name">Data Residency</td>
-            <td>US, EU, Frankfurt</td>
-            <td>US East only</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-header">
+            <div class="step-number">1</div>
+            <h3>Add a page</h3>
+          </div>
+          <p>Navigate to your first option and click <strong>+ Add Page</strong>. The extension extracts clean visible text directly from your active tab.</p>
+        </div>
 
-  <!-- Core Highlights / Principles -->
-  <section class="features-grid">
-    <div class="feature-box">
-      <h3>🛡️ Zero Hallucination</h3>
-      <p>If a page does not state a detail, the AI outputs "Not stated". It never fills in gaps with assumed training knowledge.</p>
-    </div>
-    <div class="feature-box">
-      <h3>⚡ Rapid Groq Inference</h3>
-      <p>Leveraging high-throughput models on Groq hardware ensures complete side-by-side matrices generate in under 5 seconds.</p>
-    </div>
-    <div class="feature-box">
-      <h3>🔒 Maximum Privacy</h3>
-      <p>Ephemeral processing with minimal Manifest V3 permissions. No background tab tracking and zero data retention.</p>
-    </div>
-  </section>
+        <div class="step-card">
+          <div class="step-header">
+            <div class="step-number">2</div>
+            <h3>Add another</h3>
+          </div>
+          <p>Switch to competitor tabs, job postings, or product pages and add them with one click. Compare up to 4 tabs simultaneously.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-header">
+            <div class="step-number">3</div>
+            <h3>Compare</h3>
+          </div>
+          <p>Hit <strong>Compare</strong> to generate an analytical, side-by-side comparison matrix with winner verdicts, trade-offs, and CSV export.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screenshot Placeholder & Live Matrix Preview -->
+    <section class="screenshot-section" id="screenshot">
+      <div class="section-header">
+        <h2>Product Interface Preview</h2>
+        <p>Zero chatbot chatter. Structured analytical grids modeled after Google Flights.</p>
+      </div>
+
+      <div class="screenshot-card">
+        <div class="browser-bar">
+          <div class="window-dots">
+            <div class="dot dot-red"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+          </div>
+          <div class="browser-title">Compare Anything &bull; Decision Matrix</div>
+          <div style="width: 33px;"></div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="comparison-grid">
+            <thead>
+              <tr>
+                <th>Criteria</th>
+                <th>Framework X <span class="badge-winner">Best Overall</span></th>
+                <th>Library Y</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="criteria">License</td>
+                <td class="winner-cell"><strong>MIT (Open Source)</strong></td>
+                <td>Apache 2.0</td>
+              </tr>
+              <tr>
+                <td class="criteria">Bundle Size</td>
+                <td class="winner-cell"><strong>12 kB</strong> (minified + gzipped)</td>
+                <td>48 kB</td>
+              </tr>
+              <tr>
+                <td class="criteria">Type Safety</td>
+                <td class="winner-cell">First-class TypeScript</td>
+                <td>TypeScript via @types</td>
+              </tr>
+              <tr>
+                <td class="criteria">Offline Support</td>
+                <td>Built-in Service Worker cache</td>
+                <td><span class="badge-not-stated">Not stated</span></td>
+              </tr>
+              <tr>
+                <td class="criteria">Learning Curve</td>
+                <td>Low (Zero configuration)</td>
+                <td>Moderate</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
 
   <!-- Footer -->
   <footer>
     <div class="footer-links">
       <a href="privacy-policy.html">Privacy Policy</a>
-      <a href="support.html">Support & FAQ</a>
-      <a href="https://github.com/ramim452996/Extension" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+      <a href="support.html">Support</a>
+      <a href="https://github.com/ramim452996/Extension" target="_blank" rel="noopener noreferrer">Chrome Web Store / GitHub</a>
     </div>
     <p>&copy; 2026 Compare Anything. Released under the open-source MIT License.</p>
   </footer>

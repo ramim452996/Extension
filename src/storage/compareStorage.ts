@@ -69,12 +69,28 @@ export async function setGoal(goal: string): Promise<void> {
   await chrome.storage.local.set({ goal })
 }
 
-// ── Clear ─────────────────────────────────────────────────────────────────────
+// ── Clear & Reset ─────────────────────────────────────────────────────────────
 
 /**
  * Wipe all workspace state (pages + goal).
  * Preserves installId — it is permanent and anonymous.
+ * Also clears cached comparison results as required by SPEC Section 24.
  */
 export async function clearAll(): Promise<void> {
   await chrome.storage.local.set({ pages: [], goal: '' })
+  await chrome.storage.local.remove(['selectedPages', 'comparisonResult', 'userGoal', 'latestComparison'])
+}
+
+/**
+ * Explicitly remove comparison payloads on user reset/start new.
+ */
+export async function resetStorage(): Promise<void> {
+  await chrome.storage.local.remove([
+    'pages',
+    'goal',
+    'selectedPages',
+    'comparisonResult',
+    'userGoal',
+    'latestComparison',
+  ])
 }

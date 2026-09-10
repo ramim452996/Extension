@@ -50,15 +50,39 @@ function renderValue(value: unknown) {
 export default function Results() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [copyToast, setCopyToast] = useState(false)
 
   useEffect(() => {
-    chrome.storage.local.get(['latestComparison'], (result) => {
-      if (result.latestComparison) {
-        setData(result.latestComparison)
+    chrome.storage.local.get(['latestComparison', 'comparisonResult'], (result) => {
+      const active = result.latestComparison || result.comparisonResult
+      if (active) {
+        setData(active)
       }
       setLoading(false)
     })
   }, [])
+
+  const handleCopyMarkdown = async () => {
+    const success = await copyAsMarkdown(data)
+    if (success) {
+      setCopyToast(true)
+      setTimeout(() => setCopyToast(false), 2500)
+    }
+  }
+
+  const handleStartNew = async () => {
+    // SPEC Section 24 compliance: wipe selectedPages, comparisonResult, userGoal
+    await chrome.storage.local.remove([
+      'pages',
+      'goal',
+      'selectedPages',
+      'comparisonResult',
+      'userGoal',
+      'latestComparison',
+    ])
+    // Close results tab to focus extension or return
+    window.close()
+  }
 
   if (loading) {
     return (
@@ -74,7 +98,13 @@ export default function Results() {
       <div className="flex flex-col h-screen items-center justify-center bg-gray-950 text-white p-8 text-center">
         <span className="text-4xl mb-4">⚠️</span>
         <h1 className="text-2xl font-bold mb-2">No Comparison Data Found</h1>
-        <p className="text-gray-400">Please start a new comparison from the extension popup.</p>
+        <p className="text-gray-400 mb-6 max-w-sm">Please select 2 to 4 pages and start a comparison from the extension popup.</p>
+        <button
+          onClick={handleStartNew}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors"
+        >
+          Return to Extension
+        </button>
       </div>
     )
   }
@@ -90,7 +120,13 @@ export default function Results() {
       <div className="flex flex-col h-screen items-center justify-center bg-gray-950 text-white p-8 text-center">
         <span className="text-4xl mb-4">❌</span>
         <h1 className="text-2xl font-bold mb-2">Error Generating Comparison</h1>
-        <p className="text-red-400 max-w-md">{errorMsg}</p>
+        <p className="text-red-400 max-w-md mb-6">{errorMsg}</p>
+        <button
+          onClick={handleStartNew}
+          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold rounded-lg transition-colors border border-gray-700"
+        >
+          Start New Comparison
+        </button>
       </div>
     )
   }
@@ -101,85 +137,109 @@ export default function Results() {
   // Table minWidth: 2 items -> 720px, 3 items -> 880px, 4 items -> 1060px
   const tableMinWidth = Math.max(700, itemCount * 210 + 220)
 
+  // Best For items list
+  const bestForList = Array.isArray(data.bestFor) ? data.bestFor : []
+
+  // Key Differences list
+  const differencesList = Array.isArray(data.keyDifferences)
+    ? data.keyDifferences
+    : Array.isArray(data.importantDifferences)
+    ? data.importantDifferences
+    : []
+
+  // Missing Information list
+  const missingInfoList = Array.isArray(data.missingInformation) ? data.missingInformation : []
+
+  // Source Links list
+  const sourceLinksList = Array.isArray(data.sourceLinks) ? data.sourceLinks : []
+
+  // Evaluate Best Overall data
+  const bestOverallObj = data.bestOverall
+  const winnerItem = bestOverallObj?.itemId
+    ? items.find((i: any) => i.id === bestOverallObj.itemId)
+    : null
+  const winnerTitle = winnerItem
+    ? winnerItem.displayName
+    : bestOverallObj?.itemId
+    ? bestOverallObj.itemId
+    : 'No Single Winner (Tied / Incomparable Trade-offs)'
+  const winnerReason = bestOverallObj?.reason
+    ? safeText(bestOverallObj.reason)
+    : 'Items represent differing specifications and trade-offs without a single objective winner.'
+
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 p-6 md:p-8 font-sans">
       <div className="max-w-6xl mx-auto space-y-8">
         
-        {/* Header */}
-        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-800 pb-4">
-          <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 break-words">
-              {safeText(data.comparisonTitle, 'Comparison Results')}
-            </h1>
-            <p className="text-sm text-gray-400 break-words">
-              <span className="font-semibold text-gray-300">Goal:</span> {safeText(data.goal, 'Objective Comparison')}
-            </p>
+        {/* ── 1. HEADER BLOCK (SPEC Section 21.1) ────────────────────────── */}
+        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-800 pb-5">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">⚡</span>
+              <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 break-words">
+                {safeText(data.comparisonTitle || data.title, 'Comparison Matrix')}
+              </h1>
+            </div>
+            <div className="inline-flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-full px-3 py-1 text-xs text-gray-300">
+              <span className="font-semibold text-blue-400">Goal:</span>
+              <span className="truncate max-w-md">{safeText(data.goal, 'Objective Comparison')}</span>
+            </div>
           </div>
-          <div className="flex gap-3 shrink-0">
+
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
             <button 
-              onClick={() => copyAsMarkdown(data)}
-              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors border border-gray-700"
-              title="Copy comparison as formatted Markdown"
+              onClick={handleCopyMarkdown}
+              className="relative px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold rounded-lg transition-colors border border-gray-700 flex items-center gap-1.5 shadow-sm"
+              title="Copy comparison as formatted Markdown table"
             >
-              📋 Copy Markdown
+              <span>📋</span>
+              <span>Copy Markdown</span>
+              {copyToast && (
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-md whitespace-nowrap animate-fade-in">
+                  Copied!
+                </span>
+              )}
             </button>
+
             <button 
               onClick={() => downloadCSV(data)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
-              title="Download comparison as CSV"
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+              title="Download comparison as RFC-4180 CSV"
             >
-              📥 Download CSV
+              <span>📥</span>
+              <span>Download CSV</span>
+            </button>
+
+            <button 
+              onClick={handleStartNew}
+              className="px-3.5 py-2 bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white text-xs font-semibold rounded-lg transition-colors border border-gray-800 flex items-center gap-1.5"
+              title="Clear workspace and return to tab selection"
+            >
+              <span>🔄</span>
+              <span>Start New</span>
             </button>
           </div>
         </header>
 
-        {/* Best Overall */}
-        {data.bestOverall && (
-          <section className="bg-gradient-to-br from-blue-900/30 via-gray-900 to-purple-900/30 border border-purple-500/30 rounded-xl p-6 shadow-lg">
-            <h2 className="text-xl font-semibold flex items-center gap-2 mb-3">
-              <span>🏆</span> Best Overall
+        {/* ── 2. BEST OVERALL CARD (SPEC Section 21.2) ───────────────────── */}
+        <section className="bg-gradient-to-br from-indigo-950/40 via-gray-900 to-purple-950/30 border border-indigo-500/30 rounded-xl p-6 shadow-lg">
+          <div className="flex items-center gap-2 mb-2.5">
+            <span className="text-xl">🏆</span>
+            <h2 className="text-base font-bold uppercase tracking-wider text-indigo-300">
+              Best Overall Verdict
             </h2>
-            <div className="space-y-1.5">
-              <p className="font-bold text-lg text-blue-300 break-words">
-                {data.bestOverall.itemId
-                  ? safeText(
-                      items.find((i: any) => i.id === data.bestOverall.itemId)?.displayName || data.bestOverall.itemId,
-                      'Selected Winner'
-                    )
-                  : 'No Single Winner (Tied or Insufficient Data)'}
-              </p>
-              <p className="text-gray-300 break-words leading-relaxed text-sm">
-                {safeText(data.bestOverall.reason, 'No detailed evaluation rationale provided.')}
-              </p>
-            </div>
-          </section>
-        )}
+          </div>
+          <div className="space-y-1.5">
+            <p className="font-bold text-lg sm:text-xl text-white break-words">
+              {winnerTitle}
+            </p>
+            <p className="text-gray-300 break-words leading-relaxed text-sm max-w-4xl">
+              {winnerReason}
+            </p>
+          </div>
+        </section>
 
-        {/* Best For (if provided) */}
-        {Array.isArray(data.bestFor) && data.bestFor.length > 0 && (
-          <section className="bg-gray-900 rounded-xl border border-gray-800 p-6 shadow-md">
-            <h3 className="font-semibold text-lg mb-4 text-gray-200 flex items-center gap-2">
-              <span>🎯</span> Best For Specific Needs
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {data.bestFor.map((bf: any, i: number) => {
-                const item = items.find((it: any) => it.id === bf.itemId)
-                const itemLabel = safeText(item?.displayName || bf.itemId, 'Item')
-                const label = safeText(bf.label, 'Recommendation')
-                const reason = safeText(bf.reason, 'Recommended based on stated specs.')
-                return (
-                  <div key={i} className="bg-gray-800/40 border border-gray-700/50 rounded-lg p-4 space-y-1.5">
-                    <span className="text-[11px] uppercase tracking-wider text-blue-400 font-semibold">{label}</span>
-                    <p className="font-medium text-white break-words text-sm">{itemLabel}</p>
-                    <p className="text-xs text-gray-400 break-words leading-relaxed">{reason}</p>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* Criteria Matrix with Responsive Table & Horizontal Scroll Fallback */}
+        {/* ── 3. COMPARISON TABLE (SPEC Section 21.3 & Section 22) ───────── */}
         <section className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
             <table 
@@ -187,7 +247,7 @@ export default function Results() {
               style={{ minWidth: `${tableMinWidth}px` }}
             >
               <thead>
-                <tr className="bg-gray-800/60 border-b border-gray-700">
+                <tr className="bg-gray-800/70 border-b border-gray-700">
                   <th className="p-4 font-semibold text-gray-300 w-1/4 min-w-[180px] max-w-[240px] align-bottom">
                     Criteria
                   </th>
@@ -220,14 +280,19 @@ export default function Results() {
                       const valObj = c.values?.find((v: any) => v.itemId === item.id)
                       const isWinner = Array.isArray(c.winnerItemIds) && c.winnerItemIds.includes(item.id)
                       return (
-                        <td key={item.id} className="p-4 align-top border-l border-gray-800/80 min-w-[180px]">
-                          <div className={`flex flex-col gap-1.5 ${isWinner ? 'text-green-300 font-medium' : 'text-gray-300'}`}>
+                        <td 
+                          key={item.id} 
+                          className={`p-4 align-top border-l border-gray-800/80 min-w-[180px] ${
+                            isWinner ? 'bg-emerald-950/15' : ''
+                          }`}
+                        >
+                          <div className={`flex flex-col gap-1.5 ${isWinner ? 'text-emerald-300 font-medium' : 'text-gray-300'}`}>
                             {isWinner && (
-                              <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-green-400 font-bold bg-green-950/60 border border-green-700/40 rounded px-1.5 py-0.5 w-fit">
+                              <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-700/40 rounded px-1.5 py-0.5 w-fit">
                                 <span>✓</span> Winner
                               </span>
                             )}
-                            <div className="break-words whitespace-normal leading-relaxed text-sm">
+                            <div className="break-words whitespace-normal leading-relaxed text-sm py-0.5">
                               {renderValue(valObj?.value)}
                             </div>
                           </div>
@@ -241,31 +306,65 @@ export default function Results() {
           </div>
         </section>
 
-        {/* Differences & Missing Info Grid */}
+        {/* ── 4. BEST FOR SPECIFIC NEEDS (SPEC Section 21.4) ──────────────── */}
+        <section className="bg-gray-900 rounded-xl border border-gray-800 p-6 shadow-md">
+          <h3 className="font-semibold text-lg mb-4 text-gray-200 flex items-center gap-2">
+            <span>🎯</span> Best For Specific Needs
+          </h3>
+          {bestForList.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {bestForList.map((bf: any, i: number) => {
+                const item = items.find((it: any) => it.id === bf.itemId)
+                const itemLabel = safeText(item?.displayName || bf.winner || bf.itemId, 'Item')
+                const label = safeText(bf.label, 'Recommendation')
+                const reason = safeText(bf.reason, 'Recommended based on stated specs.')
+                return (
+                  <div key={i} className="bg-gray-800/40 border border-gray-700/50 rounded-lg p-4 space-y-1.5 hover:border-gray-600/60 transition-colors">
+                    <span className="text-[11px] uppercase tracking-wider text-indigo-400 font-semibold">{label}</span>
+                    <p className="font-medium text-white break-words text-sm">{itemLabel}</p>
+                    <p className="text-xs text-gray-400 break-words leading-relaxed">{reason}</p>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 italic">
+              No specific specialty recommendations; items present balanced profiles across general criteria.
+            </p>
+          )}
+        </section>
+
+        {/* ── 5 & 6. KEY DIFFERENCES & MISSING INFO (SPEC Section 21.5 & 21.6) ─ */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {Array.isArray(data.keyDifferences) && data.keyDifferences.length > 0 && (
-            <section className="bg-gray-900/90 rounded-xl border border-gray-800 p-6 shadow-md flex flex-col">
-              <h3 className="font-semibold text-lg mb-4 text-gray-100 flex items-center gap-2">
-                <span>🔍</span> Key Differences
-              </h3>
+          {/* Key Differences */}
+          <section className="bg-gray-900/90 rounded-xl border border-gray-800 p-6 shadow-md flex flex-col">
+            <h3 className="font-semibold text-lg mb-4 text-gray-100 flex items-center gap-2">
+              <span>🔍</span> Key Differences
+            </h3>
+            {differencesList.length > 0 ? (
               <ul className="space-y-3 text-sm flex-1">
-                {data.keyDifferences.map((diff: any, i: number) => (
+                {differencesList.map((diff: any, i: number) => (
                   <li key={i} className="flex items-start gap-2.5">
-                    <span className="text-blue-400 font-bold leading-5 select-none">•</span>
+                    <span className="text-indigo-400 font-bold leading-5 select-none">•</span>
                     <span className="text-gray-300 break-words leading-relaxed">{safeText(diff, 'Not stated')}</span>
                   </li>
                 ))}
               </ul>
-            </section>
-          )}
+            ) : (
+              <p className="text-sm text-gray-400 italic">
+                No major differentiating factors noted between compared items.
+              </p>
+            )}
+          </section>
 
-          {Array.isArray(data.missingInformation) && data.missingInformation.length > 0 && (
-            <section className="bg-gray-900/90 rounded-xl border border-gray-800 p-6 shadow-md flex flex-col">
-              <h3 className="font-semibold text-lg mb-4 text-gray-100 flex items-center gap-2">
-                <span className="text-amber-400">⚠️</span> Missing Information
-              </h3>
+          {/* Missing Information */}
+          <section className="bg-gray-900/90 rounded-xl border border-gray-800 p-6 shadow-md flex flex-col">
+            <h3 className="font-semibold text-lg mb-4 text-gray-100 flex items-center gap-2">
+              <span className="text-amber-400">⚠️</span> Missing Information
+            </h3>
+            {missingInfoList.length > 0 ? (
               <div className="space-y-4 text-sm flex-1">
-                {data.missingInformation.map((mi: any, i: number) => {
+                {missingInfoList.map((mi: any, i: number) => {
                   const item = items.find((it: any) => it.id === mi.itemId)
                   const itemLabel = safeText(item?.displayName || mi.itemId, 'Item')
                   const fieldsList = Array.isArray(mi.fields)
@@ -299,32 +398,39 @@ export default function Results() {
                   )
                 })}
               </div>
-            </section>
-          )}
+            ) : (
+              <p className="text-sm text-gray-400 italic">
+                All relevant core attributes were explicitly present on the analyzed pages.
+              </p>
+            )}
+          </section>
         </div>
 
-        {/* Source Links (if provided) */}
-        {Array.isArray(data.sourceLinks) && data.sourceLinks.length > 0 && (
-          <section className="bg-gray-900/60 rounded-xl border border-gray-800/80 p-5">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-1.5">
-              <span>🔗</span> Source Webpages
-            </h4>
+        {/* ── 7. SOURCES LIST (SPEC Section 21.7 & Section 23.4) ──────────── */}
+        <section className="bg-gray-900/60 rounded-xl border border-gray-800/80 p-5">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-1.5">
+            <span>🔗</span> Source Webpages
+          </h4>
+          {sourceLinksList.length > 0 ? (
             <div className="flex flex-wrap gap-3">
-              {data.sourceLinks.map((link: any, idx: number) => (
+              {sourceLinksList.map((link: any, idx: number) => (
                 <a
                   key={idx}
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 bg-gray-800/80 hover:bg-gray-700/80 text-blue-400 hover:text-blue-300 text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-700/50 transition-colors max-w-sm truncate"
+                  className="inline-flex items-center gap-2 bg-gray-800/80 hover:bg-gray-700/80 text-blue-400 hover:text-blue-300 text-xs font-medium px-3.5 py-2 rounded-lg border border-gray-700/50 transition-colors max-w-sm truncate shadow-sm"
+                  title={`Open original source: ${link.url}`}
                 >
                   <span className="truncate">{safeText(link.title || link.url)}</span>
                   <span className="shrink-0 text-gray-500">↗</span>
                 </a>
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <p className="text-xs text-gray-500 italic">No direct source links recorded.</p>
+          )}
+        </section>
 
       </div>
     </div>
