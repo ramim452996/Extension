@@ -387,38 +387,42 @@ export default function Popup() {
 
         {/* ── 1-CLICK TAB PICKER: Add any other open tab directly without switching! ── */}
         {unaddedTabs.length > 0 && !isAtMax && (
-          <div className="pt-2">
+          <div className="pt-1.5">
             <button
               onClick={() => setTabPickerOpen((prev) => !prev)}
-              className="w-full flex items-center justify-between px-3 py-2 bg-indigo-950/40 hover:bg-indigo-900/50 border border-indigo-500/20 rounded-lg text-xs font-semibold text-indigo-200 transition-colors"
+              className="w-full flex items-center justify-between px-3.5 py-2.5 bg-gradient-to-r from-indigo-950/50 to-blue-950/40 hover:from-indigo-900/60 hover:to-blue-900/50 border border-indigo-500/25 rounded-xl text-xs font-semibold text-indigo-200 transition-all shadow-sm"
             >
-              <span className="flex items-center gap-1.5">
-                <span>📑</span> Add Other Open Tabs ({unaddedTabs.length})
+              <span className="flex items-center gap-2">
+                <span className="text-sm">📑</span>
+                <span>Add from Open Tabs</span>
+                <span className="bg-indigo-500/30 text-indigo-300 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                  {unaddedTabs.length}
+                </span>
               </span>
-              <span className="text-[11px] text-indigo-400">
-                {tabPickerOpen ? '▲ Hide' : '▼ 1-Click Pick'}
+              <span className="text-[11px] font-medium text-indigo-400">
+                {tabPickerOpen ? '▲ Hide' : '▼ Quick Pick'}
               </span>
             </button>
 
             {tabPickerOpen && (
-              <div className="mt-1.5 space-y-1.5 max-h-44 overflow-y-auto pr-1">
+              <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto pr-1">
                 {unaddedTabs.map((t) => (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between p-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition-colors gap-2"
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.05] border border-white/[0.06] hover:border-indigo-500/30 transition-all gap-2.5"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-medium text-white/90 truncate">
+                      <p className="text-[11.5px] font-medium text-white/95 truncate">
                         {t.title}
                       </p>
-                      <p className="text-[10px] text-white/40 truncate">
+                      <p className="text-[10px] text-white/40 truncate mt-0.5">
                         {t.domain}
                       </p>
                     </div>
                     <button
                       onClick={() => captureTabById(t.id, t.url)}
                       disabled={status === 'extracting'}
-                      className="shrink-0 px-2 py-1 text-[10px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-all shadow-sm"
+                      className="shrink-0 px-2.5 py-1 text-[10.5px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all shadow-sm active:scale-95"
                     >
                       + Add
                     </button>

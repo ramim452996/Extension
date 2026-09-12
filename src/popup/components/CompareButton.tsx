@@ -17,10 +17,9 @@ export default function CompareButton({ pages, onClick }: CompareButtonProps) {
         onClick={onClick}
         aria-label={`Compare ${count} pages`}
       >
-        {/* Decorative brackets */}
-        <span className="opacity-60">[ </span>
-        COMPARE {count} PAGE{count > 1 ? 'S' : ''}
-        <span className="opacity-60"> ]</span>
+        <span>⚡</span>
+        <span>COMPARE {count} TABS</span>
+        <span className="text-white/60 text-xs">➔</span>
       </button>
     </div>
   )
