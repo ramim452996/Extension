@@ -6,7 +6,7 @@
   "icons": {
     "128": "icon128.png"
   },
-  "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
+  "permissions": ["activeTab", "tabs", "scripting", "storage", "contextMenus"],
   "host_permissions": [
     "https://*.onrender.com/*",
     "https://compare-backend.test/*",
