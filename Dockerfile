@@ -1,13 +1,13 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.3-cli-alpine
 
 # Install system dependencies and PHP extensions
 RUN apk add --no-cache \
-    nginx \
     curl \
     git \
     libpng-dev \
     libxml2-dev \
     libzip-dev \
+    oniguruma-dev \
     zip \
     unzip \
     sqlite \
@@ -30,18 +30,17 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 # Install Composer dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Create database file if sqlite
-RUN touch /var/www/html/database/database.sqlite \
-    && chown www-data:www-data /var/www/html/database/database.sqlite \
-    && chmod 775 /var/www/html/database/database.sqlite
+# Create database file
+RUN mkdir -p /var/www/html/database \
+    && touch /var/www/html/database/database.sqlite \
+    && chown -R www-data:www-data /var/www/html/database \
+    && chmod -R 775 /var/www/html/database
 
-# Nginx config
-COPY render-nginx.conf /etc/nginx/nginx.conf
-
-# Start script
 COPY render-start.sh /render-start.sh
 RUN chmod +x /render-start.sh
 
-EXPOSE 80
+# Render injects $PORT (defaults to 10000)
+ENV PORT=10000
+EXPOSE 10000
 
 CMD ["/render-start.sh"]
