@@ -54,7 +54,11 @@ CORE RULES (NEVER VIOLATE):
    - The only exception is "bestOverall.itemId", which can be null when items are tied or data is insufficient.
    - Never rename, alter, shorten, or invent IDs.
 
-7. OUTPUT FORMAT:
+7. CONCISENESS & SPEED:
+   - Keep shortDescription, criteria values, reasons, and differences crisp, concise, and focused (1-2 sentences max per item/value).
+   - This ensures responses never exceed token limits and JSON never truncates.
+
+8. OUTPUT FORMAT:
    - Your entire response MUST be a single valid JSON object strictly matching the schema below.
    - Do not include markdown code fences (```json), commentary, or extra text before or after the JSON.
 
@@ -104,34 +108,45 @@ PROMPT;
      */
     public function generateComparison(array $payload): array
     {
+        // Ensure script has sufficient execution time for LLM calls with rate limit backoffs
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(120);
+        }
+
         $userPrompt = $this->buildUserPrompt($payload);
         $primaryProvider = config('services.ai_provider', 'groq');
-        $fallbackProvider = $primaryProvider === 'openrouter' ? 'groq' : 'openrouter';
 
-        // Primary provider attempt
-        try {
-            $res = $this->callProvider($primaryProvider, $userPrompt);
-            return $this->formatComparisonResult($res, $payload);
-        } catch (\Throwable $primaryException) {
-            logger()->warning("ComparisonService: Primary provider [{$primaryProvider}] failed.", [
-                'error' => $primaryException->getMessage(),
-            ]);
+        // Sequence of Groq models to try if the first encounters token truncation, rate limits, or validation errors
+        $groqModelsToTry = array_unique([
+            config('services.groq.model', 'groq/compound-mini'),
+            'openai/gpt-oss-20b',
+            'llama-3.3-70b-versatile',
+        ]);
 
-            // If Groq was primary and failed, try secondary Groq model before fallback
-            if ($primaryProvider === 'groq') {
+        if ($primaryProvider === 'groq') {
+            foreach ($groqModelsToTry as $groqModel) {
                 try {
-                    logger()->info('ComparisonService: Retrying Groq with openai/gpt-oss-20b...');
-                    $res = $this->callProvider('groq', $userPrompt, 'openai/gpt-oss-20b');
+                    $res = $this->callProvider('groq', $userPrompt, $groqModel);
                     return $this->formatComparisonResult($res, $payload);
-                } catch (\Throwable $groqSecondaryException) {
-                    logger()->warning('ComparisonService: Groq secondary also failed.', [
-                        'error' => $groqSecondaryException->getMessage(),
+                } catch (\Throwable $groqException) {
+                    logger()->warning("ComparisonService: Groq model [{$groqModel}] failed.", [
+                        'error' => $groqException->getMessage(),
                     ]);
                 }
             }
+        } else {
+            try {
+                $res = $this->callProvider($primaryProvider, $userPrompt);
+                return $this->formatComparisonResult($res, $payload);
+            } catch (\Throwable $primaryException) {
+                logger()->warning("ComparisonService: Primary provider [{$primaryProvider}] failed.", [
+                    'error' => $primaryException->getMessage(),
+                ]);
+            }
         }
 
-        // Secondary provider fallback
+        // Secondary provider fallback (OpenRouter)
+        $fallbackProvider = $primaryProvider === 'openrouter' ? 'groq' : 'openrouter';
         try {
             $res = $this->callProvider($fallbackProvider, $userPrompt);
             return $this->formatComparisonResult($res, $payload);
@@ -178,7 +193,7 @@ PROMPT;
                         ['role' => 'user',   'content' => $userPrompt],
                     ],
                     'temperature'     => 0.1,   // deterministic, factual output
-                    'max_tokens'      => 3000,
+                    'max_tokens'      => 4096,
                     'response_format' => ['type' => 'json_object'],
                 ]);
 

@@ -31,6 +31,10 @@ class CompareController extends Controller
      */
     public function __invoke(Request $request): JsonResponse
     {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(120);
+        }
+
         // ── 1. Normalize input for backwards & schema compatibility ──────────
         $data = $request->all();
         if (empty($data['installId'])) {
