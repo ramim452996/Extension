@@ -283,12 +283,12 @@ export default function Popup() {
             <h1 className="text-[15px] font-bold gradient-text leading-none">
               Compare Anything
             </h1>
-            <p className="text-[10px] text-white/40 mt-0.5 font-medium tracking-wide">
+            <p className="text-[10px] text-slate-500 mt-0.5 font-medium tracking-wide">
               Instant Tab & Web Comparison
             </p>
           </div>
           {pages.length > 0 && (
-            <span className="ml-auto text-[10px] font-bold bg-white/10 rounded-full px-2 py-0.5 text-white/70">
+            <span className="ml-auto text-[10.5px] font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full px-2 py-0.5">
               {pages.length}/4
             </span>
           )}
@@ -300,20 +300,20 @@ export default function Popup() {
 
       {/* ── First-Use Privacy Disclosure Notice ─────────────────────────── */}
       {!hasSeenPrivacyNotice && (
-        <div className="mx-4 mt-3 p-3 rounded-lg bg-indigo-950/70 border border-indigo-500/30 text-left text-xs text-white/90 shadow-lg">
+        <div className="mx-4 mt-3 p-3 rounded-xl bg-indigo-50/90 border border-indigo-200 text-left text-xs text-slate-800 shadow-sm">
           <div className="flex items-start gap-2 mb-1.5">
             <span className="text-base leading-none">🛡️</span>
-            <div className="font-semibold text-indigo-200">How Your Data is Handled</div>
+            <div className="font-semibold text-indigo-900">How Your Data is Handled</div>
           </div>
-          <p className="text-[11px] leading-relaxed text-indigo-100/80 mb-2">
+          <p className="text-[11px] leading-relaxed text-slate-600 mb-2">
             Compare Anything extracts relevant text from webpages you explicitly add. When you click <strong>Compare</strong>, that extracted information is securely sent via HTTPS to our server and AI provider to generate the comparison.
           </p>
-          <div className="flex items-center justify-between pt-1 border-t border-indigo-500/20">
+          <div className="flex items-center justify-between pt-1 border-t border-indigo-100">
             <a
               href="https://ramim452996.github.io/Extension/privacy-policy.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-indigo-300 hover:text-white underline"
+              className="text-[10.5px] font-medium text-indigo-600 hover:text-indigo-800 underline"
             >
               Privacy Policy
             </a>
@@ -322,7 +322,7 @@ export default function Popup() {
                 await chrome.storage.local.set({ hasSeenPrivacyNotice: true })
                 setHasSeenPrivacyNotice(true)
               }}
-              className="px-2.5 py-1 text-[10px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors"
+              className="px-2.5 py-1 text-[10px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-md transition-colors"
             >
               Got it
             </button>
@@ -375,14 +375,14 @@ export default function Popup() {
         </button>
 
         {/* ── Professional Quick Tip / Shortcut Badge ────────────────────── */}
-        <div className="flex items-center justify-between text-[10px] text-white/40 px-1 pt-0.5">
+        <div className="flex items-center justify-between text-[10.5px] text-slate-500 px-1 pt-0.5">
           <span className="flex items-center gap-1">
             <span>💡</span> Pro Tip:
           </span>
-          <span className="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 text-indigo-300 font-mono font-medium">
+          <span className="bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 text-indigo-700 font-mono font-semibold">
             Alt + C
           </span>
-          <span className="text-white/30">adds current tab from anywhere</span>
+          <span className="text-slate-400">adds tab from anywhere</span>
         </div>
 
         {/* ── 1-CLICK TAB PICKER: Add any other open tab directly without switching! ── */}
@@ -390,16 +390,16 @@ export default function Popup() {
           <div className="pt-1.5">
             <button
               onClick={() => setTabPickerOpen((prev) => !prev)}
-              className="w-full flex items-center justify-between px-3.5 py-2.5 bg-gradient-to-r from-indigo-950/50 to-blue-950/40 hover:from-indigo-900/60 hover:to-blue-900/50 border border-indigo-500/25 rounded-xl text-xs font-semibold text-indigo-200 transition-all shadow-sm"
+              className="w-full flex items-center justify-between px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200/80 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 transition-all shadow-sm"
             >
               <span className="flex items-center gap-2">
                 <span className="text-sm">📑</span>
                 <span>Add from Open Tabs</span>
-                <span className="bg-indigo-500/30 text-indigo-300 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
                   {unaddedTabs.length}
                 </span>
               </span>
-              <span className="text-[11px] font-medium text-indigo-400">
+              <span className="text-[11px] font-medium text-slate-500">
                 {tabPickerOpen ? '▲ Hide' : '▼ Quick Pick'}
               </span>
             </button>
@@ -409,13 +409,13 @@ export default function Popup() {
                 {unaddedTabs.map((t) => (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.05] border border-white/[0.06] hover:border-indigo-500/30 transition-all gap-2.5"
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 shadow-sm transition-all gap-2.5"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-[11.5px] font-medium text-white/95 truncate">
+                      <p className="text-[11.5px] font-semibold text-slate-800 truncate">
                         {t.title}
                       </p>
-                      <p className="text-[10px] text-white/40 truncate mt-0.5">
+                      <p className="text-[10px] text-slate-400 truncate mt-0.5">
                         {t.domain}
                       </p>
                     </div>
@@ -457,13 +457,13 @@ export default function Popup() {
             Clear Comparison
           </button>
         )}
-        <div className="text-[10px] text-white/30 text-center">
+        <div className="text-[10.5px] text-slate-400 text-center">
           Pages accessed only on your click &bull;{' '}
           <a
             href="https://ramim452996.github.io/Extension/privacy-policy.html"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white/40 hover:text-white/70 underline"
+            className="text-slate-500 hover:text-slate-800 underline"
           >
             Privacy
           </a>
@@ -472,7 +472,7 @@ export default function Popup() {
             href="https://ramim452996.github.io/Extension/support.html"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white/40 hover:text-white/70 underline"
+            className="text-slate-500 hover:text-slate-800 underline"
           >
             Support
           </a>
