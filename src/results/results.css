@@ -12,8 +12,6 @@ html, body, #root {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: #030712; /* gray-950 */
-  color: #f3f4f6; /* gray-100 */
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
 }
