@@ -28,6 +28,7 @@ out/
 /.phpunit.cache
 
 # 4. Storage, Cache, and SQLite Databases
+/storage/framework/cache/data/*
 /storage/framework/views/*
 /storage/logs/*.log
 /storage/*.key
