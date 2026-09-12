@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { toPng } from 'html-to-image'
 import { copyAsMarkdown, downloadCSV } from '../utils/export'
 
 // ── Render Protection Helpers ──────────────────────────────────────────────────
@@ -51,6 +52,11 @@ export default function Results() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [copyToast, setCopyToast] = useState(false)
+  const [exportingImage, setExportingImage] = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null)
+
+  const comparisonContentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     chrome.storage.local.get(['latestComparison', 'comparisonResult'], (result) => {
@@ -68,6 +74,79 @@ export default function Results() {
       setCopyToast(true)
       setTimeout(() => setCopyToast(false), 2500)
     }
+  }
+
+  const handleDownloadImage = async () => {
+    if (!comparisonContentRef.current) return
+    try {
+      setExportingImage(true)
+      const dataUrl = await toPng(comparisonContentRef.current, {
+        cacheBust: true,
+        backgroundColor: '#030712', // Dark background
+        pixelRatio: 2, // Crisp 2x retina export
+      })
+      setGeneratedImageUrl(dataUrl)
+
+      // Download PNG file directly
+      const a = document.createElement('a')
+      const sanitizedTitle = (data?.comparisonTitle || data?.title || 'comparison')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+      a.href = dataUrl
+      a.download = `${sanitizedTitle || 'comparison'}.png`
+      a.click()
+    } catch (err) {
+      console.error('Failed to export comparison as image:', err)
+      alert('Unable to generate image. Please try again.')
+    } finally {
+      setExportingImage(false)
+    }
+  }
+
+  const handleOpenShareModal = async () => {
+    setShareModalOpen(true)
+    if (!generatedImageUrl && comparisonContentRef.current) {
+      try {
+        setExportingImage(true)
+        const dataUrl = await toPng(comparisonContentRef.current, {
+          cacheBust: true,
+          backgroundColor: '#030712',
+          pixelRatio: 2,
+        })
+        setGeneratedImageUrl(dataUrl)
+      } catch (e) {
+        console.error('Could not pre-render image:', e)
+      } finally {
+        setExportingImage(false)
+      }
+    }
+  }
+
+  const getShareText = () => {
+    const title = safeText(data?.comparisonTitle || data?.title, 'Web Comparison')
+    const winner = data?.bestOverall?.itemId
+      ? (data?.items?.find((i: any) => i.id === data.bestOverall.itemId)?.displayName || data.bestOverall.itemId)
+      : null
+    return winner
+      ? `Check out this comparison: ${title}. Best Overall: ${winner} ⚡ Generated with Compare Anything.`
+      : `Check out this side-by-side comparison: ${title} ⚡ Generated with Compare Anything.`
+  }
+
+  const shareToTwitter = () => {
+    const text = encodeURIComponent(getShareText())
+    const url = encodeURIComponent('https://compareanything.com')
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'noopener,noreferrer,width=600,height=450')
+  }
+
+  const shareToLinkedIn = () => {
+    const url = encodeURIComponent('https://compareanything.com')
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank', 'noopener,noreferrer,width=600,height=550')
+  }
+
+  const shareToFacebook = () => {
+    const url = encodeURIComponent('https://compareanything.com')
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'noopener,noreferrer,width=600,height=500')
   }
 
   const handleStartNew = async () => {
@@ -211,6 +290,25 @@ export default function Results() {
             </button>
 
             <button 
+              onClick={handleDownloadImage}
+              disabled={exportingImage}
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+              title="Export comparison matrix as a shareable PNG image"
+            >
+              <span>🖼️</span>
+              <span>{exportingImage ? 'Generating...' : 'Share as Image'}</span>
+            </button>
+
+            <button 
+              onClick={handleOpenShareModal}
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+              title="Share comparison directly to Twitter/X, LinkedIn, or Facebook"
+            >
+              <span>🚀</span>
+              <span>Share</span>
+            </button>
+
+            <button 
               onClick={handleStartNew}
               className="px-3.5 py-2 bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white text-xs font-semibold rounded-lg transition-colors border border-gray-800 flex items-center gap-1.5"
               title="Clear workspace and return to tab selection"
@@ -221,8 +319,20 @@ export default function Results() {
           </div>
         </header>
 
-        {/* ── 2. BEST OVERALL CARD (SPEC Section 21.2) ───────────────────── */}
-        <section className="bg-gradient-to-br from-indigo-950/40 via-gray-900 to-purple-950/30 border border-indigo-500/30 rounded-xl p-6 shadow-lg">
+        {/* ── EXPORTABLE COMPARISON AREA ─────────────────────────────────── */}
+        <div ref={comparisonContentRef} className="space-y-8 bg-gray-950 p-2 sm:p-4 rounded-2xl">
+          {/* Comparison watermark banner for viral sharing */}
+          <div className="flex items-center justify-between border-b border-gray-800/80 pb-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-400">
+              <span className="text-blue-400">⚡</span> Compare Anything
+            </div>
+            <div className="text-xs text-gray-500 font-medium">
+              Objective Zero-Hallucination Comparison
+            </div>
+          </div>
+
+          {/* ── 2. BEST OVERALL CARD (SPEC Section 21.2) ───────────────────── */}
+          <section className="bg-gradient-to-br from-indigo-950/40 via-gray-900 to-purple-950/30 border border-indigo-500/30 rounded-xl p-6 shadow-lg">
           <div className="flex items-center gap-2 mb-2.5">
             <span className="text-xl">🏆</span>
             <h2 className="text-base font-bold uppercase tracking-wider text-indigo-300">
@@ -432,7 +542,81 @@ export default function Results() {
           )}
         </section>
 
+        </div>
+        {/* ── END OF EXPORTABLE COMPARISON AREA ──────────────────────────── */}
+
       </div>
+
+      {/* ── SOCIAL SHARE MODAL ─────────────────────────────────────────── */}
+      {shareModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <div className="flex items-center gap-2 font-bold text-lg text-white">
+                <span>🚀</span> Share Comparison
+              </div>
+              <button
+                onClick={() => setShareModalOpen(false)}
+                className="text-gray-400 hover:text-white text-lg font-bold p-1 rounded-md transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-300 leading-relaxed">
+              Share your verified decision breakdown with friends, colleagues, or your network:
+            </p>
+
+            {/* Social Platform Share Buttons */}
+            <div className="grid grid-cols-3 gap-3">
+              <button
+                onClick={shareToTwitter}
+                className="flex flex-col items-center justify-center gap-2 p-3.5 bg-black hover:bg-gray-800 text-white rounded-xl border border-gray-700 transition-all hover:scale-105"
+              >
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+                <span className="text-xs font-semibold">Twitter / X</span>
+              </button>
+
+              <button
+                onClick={shareToLinkedIn}
+                className="flex flex-col items-center justify-center gap-2 p-3.5 bg-[#0077b5] hover:bg-[#006399] text-white rounded-xl transition-all hover:scale-105"
+              >
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                </svg>
+                <span className="text-xs font-semibold">LinkedIn</span>
+              </button>
+
+              <button
+                onClick={shareToFacebook}
+                className="flex flex-col items-center justify-center gap-2 p-3.5 bg-[#1877f2] hover:bg-[#166fe5] text-white rounded-xl transition-all hover:scale-105"
+              >
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                <span className="text-xs font-semibold">Facebook</span>
+              </button>
+            </div>
+
+            {/* Image Preview & Direct Image Action */}
+            <div className="pt-2 border-t border-gray-800 space-y-3">
+              <div className="flex items-center justify-between text-xs text-gray-400">
+                <span>Save visual card to attach with your post:</span>
+              </div>
+              <button
+                onClick={handleDownloadImage}
+                disabled={exportingImage}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm"
+              >
+                <span>🖼️</span>
+                <span>{exportingImage ? 'Generating Image...' : 'Download Shareable PNG Image'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
