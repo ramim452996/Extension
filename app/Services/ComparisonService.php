@@ -132,12 +132,10 @@ PROMPT;
         $userPrompt = $this->buildUserPrompt($payload);
         $primaryProvider = config('services.ai_provider', 'groq');
 
-        // Sequence of Groq models to try across different model families so AI never reports "busy" or rate-limited
+        // Sequence of Groq models verified to support json_object mode and active quotas
         $groqModelsToTry = array_unique([
             config('services.groq.model', 'groq/compound-mini'),
             'openai/gpt-oss-20b',
-            'qwen/qwen3.8-27b',
-            'llama-3.3-70b-versatile',
             'groq/compound',
         ]);
 
@@ -215,21 +213,28 @@ PROMPT;
                     'response_format' => ['type' => 'json_object'],
                 ]);
 
-            if ($response->status() === 429 && $attempt < $maxAttempts) {
-                // Rate limited — extract seconds from retry-after header or Groq message
-                $retryAfter = (int) $response->header('retry-after', 0);
-                if ($retryAfter <= 0) {
-                    $body = $response->body();
-                    if (preg_match('/try again in ([0-9.]+)s/i', $body, $m)) {
-                        $retryAfter = (int) ceil((float) $m[1]);
-                    } else {
-                        $retryAfter = 5;
-                    }
+            if ($response->status() === 429) {
+                $body = $response->body();
+                // If this model hit daily token limit (TPD), do NOT sleep 20s — break immediately to let next model in pool try!
+                if (stripos($body, 'tokens per day') !== false || stripos($body, 'TPD') !== false) {
+                    logger()->info("ComparisonService: [{$provider}/{$model}] daily token limit reached. Failing over to next model immediately.");
+                    break;
                 }
-                $sleepSec = min(max($retryAfter, 2), 20);
-                logger()->info("ComparisonService: [{$provider}] hit 429 rate limit, sleeping {$sleepSec}s (attempt {$attempt}/{$maxAttempts})...");
-                sleep($sleepSec);
-                continue;
+
+                if ($attempt < $maxAttempts) {
+                    $retryAfter = (int) $response->header('retry-after', 0);
+                    if ($retryAfter <= 0) {
+                        if (preg_match('/try again in ([0-9.]+)s/i', $body, $m)) {
+                            $retryAfter = (int) ceil((float) $m[1]);
+                        } else {
+                            $retryAfter = 3;
+                        }
+                    }
+                    $sleepSec = min(max($retryAfter, 1), 6);
+                    logger()->info("ComparisonService: [{$provider}/{$model}] hit 429 rate limit, sleeping {$sleepSec}s (attempt {$attempt}/{$maxAttempts})...");
+                    sleep($sleepSec);
+                    continue;
+                }
             }
 
             break;
@@ -317,12 +322,20 @@ PROMPT;
         $idMappingLines = [];
         $pageDataBlocks = [];
 
+        $pageCount = max(1, count($payload['pages']));
+        // Dynamically budget characters per page so 4 pages never exceed Groq's 7,000 TPM limit
+        $charLimitPerPage = $pageCount > 2 ? 1500 : 2500;
+
         foreach ($payload['pages'] as $page) {
             $id = $page['id'];
             $url = $page['url'];
             $domain = $page['domain'];
             $title = $page['title'];
             $importantText = $page['importantText'] ?? '';
+
+            if (mb_strlen($importantText) > $charLimitPerPage) {
+                $importantText = mb_substr($importantText, 0, $charLimitPerPage) . '... [truncated]';
+            }
 
             $idMappingLines[] = "  id=\"{$id}\" → {$title} ({$domain})";
 
