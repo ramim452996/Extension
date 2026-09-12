@@ -216,7 +216,7 @@ export default function Popup() {
     if (isBrowserPage) return 'Cannot add system page'
     if (isAtMax) return 'Maximum 4 pages reached'
     if (isDuplicate) return 'Already in comparison ✓'
-    return '+ ADD TO COMPARISON'
+    return '+ ADD TO COMPARISON (Alt+C)'
   }
 
   function addButtonClass(): string {

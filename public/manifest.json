@@ -6,14 +6,24 @@
   "icons": {
     "128": "icon128.png"
   },
-  "permissions": ["activeTab", "scripting", "storage"],
+  "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
   "host_permissions": [
+    "https://*.onrender.com/*",
     "https://compare-backend.test/*",
     "https://*.sharedwithexpose.com/*"
   ],
+  "commands": {
+    "add_to_comparison": {
+      "suggested_key": {
+        "default": "Alt+C",
+        "mac": "Alt+C"
+      },
+      "description": "Add current page to comparison"
+    }
+  },
   "action": {
     "default_popup": "index.html",
-    "default_title": "Compare Anything",
+    "default_title": "Compare Anything (Click or Alt+C to add)",
     "default_icon": "icon128.png"
   },
   "background": {
