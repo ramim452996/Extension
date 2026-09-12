@@ -132,11 +132,13 @@ PROMPT;
         $userPrompt = $this->buildUserPrompt($payload);
         $primaryProvider = config('services.ai_provider', 'groq');
 
-        // Sequence of Groq models to try if the first encounters token truncation, rate limits, or validation errors
+        // Sequence of Groq models to try across different model families so AI never reports "busy" or rate-limited
         $groqModelsToTry = array_unique([
             config('services.groq.model', 'groq/compound-mini'),
             'openai/gpt-oss-20b',
+            'qwen/qwen3.8-27b',
             'llama-3.3-70b-versatile',
+            'groq/compound',
         ]);
 
         if ($primaryProvider === 'groq') {
