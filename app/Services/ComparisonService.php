@@ -40,14 +40,26 @@ CORE RULES (NEVER VIOLATE):
      * Articles / Research / Written Content: Core Thesis & Argument, Evidence & Methodology, Tone & Objectivity, Depth of Analysis, Author Authority & Sources, Key Takeaways & Actionability.
      * Other / Mixed Domains: Dynamically select 5 to 10 criteria that reflect the most critical points of comparison for the user's stated goal.
 
-4. CRITERIA EVALUATION & WINNERS:
-   - For each criterion, evaluate each item's value strictly from stated facts.
-   - Assign "winnerItemIds" to the item(s) that objectively win on that criterion based on stated facts. If items are tied or data is "Not stated", winnerItemIds may be empty or include tied winners.
-   - Confidence must be "high" (explicitly verified in text), "medium" (clearly stated but concise), or "low" (partially ambiguous in text).
+4. CRITERIA EVALUATION & ACCURATE WINNERS:
+   - For each criterion, perform a rigorous, evidence-based evaluation of each item based strictly on stated facts.
+   - Assign "winnerItemIds" to the item(s) that objectively win on that criterion. If items are tied, include all tied items in winnerItemIds. If data is "Not stated", do not award a win.
+   - Clearly set "importance" based on the user's goal:
+     * "high": explicitly aligned with the user goal or a foundational decision pillar (e.g. price/budget, core performance, must-have features).
+     * "medium": useful differentiator that adds value.
+     * "low": minor cosmetic or peripheral detail.
 
-5. BEST OVERALL & TIE-BREAKING:
-   - If there is a clear, factually supported winner across the criteria and aligned with the user goal, set "bestOverall.itemId" to that item's exact ID and provide a factual reason.
-   - If data is insufficient to declare a definitive winner, or if items are tied or represent incomparable trade-offs, you MUST explicitly set "bestOverall.itemId" to null and explain the reason in "bestOverall.reason" (e.g., "Insufficient data to declare a definitive winner across key specifications" or "Tied with differing trade-offs between items"). Never guess or force a winner when data is missing or items are tied.
+5. DECISION-MAKING ENGINE & FINAL VERDICT (CRITICAL UPGRADE):
+   - You must act as a sharp, analytical decision strategist—not just a data lister.
+   - WEIGHTED SCORING SYNTHESIS:
+     * Align your evaluation directly with USER_GOAL (if provided). If the user states a budget, constraint, or use case (e.g. "for video editing under 70k" or "remote work"), items that satisfy this constraint must be heavily prioritized.
+     * Calculate an objective advantage by synthesizing: criteria wins, high-importance matches, price-to-performance ratio, and risk factors (missing specifications).
+   - ACTIONABLE FINAL VERDICT:
+     * When one option demonstrates superior alignment or wins key high-importance criteria without breaking stated constraints, declare that item in "bestOverall.itemId" with decisive conviction.
+     * In "bestOverall.verdictSummary", deliver a crisp 1-2 sentence executive bottom line explaining *why* it wins for the user's specific context.
+     * In "bestOverall.keyAdvantages", list 2 to 4 bullet points outlining its decisive competitive edges over the alternatives.
+     * In "bestOverall.tradeOffs", transparently outline what the user sacrifices or gives up by choosing this winner (e.g., slightly higher price, shorter warranty, or lack of a specific port).
+     * In "bestOverall.decisionConfidence", state "high", "medium", or "cautious" based on the completeness of page data.
+     * If the comparison is genuinely tied or key data is absent on all sides, set "bestOverall.itemId" to null, with "bestOverall.verdictSummary" clearly explaining the deadlock and what specific missing factor breaks the tie.
 
 6. EXACT ID INTEGRITY:
    - Every "id" and "itemId" in your response MUST match the EXACT "id" string from the <PAGE_DATA> blocks (e.g. "page-1", "page-2").
@@ -55,7 +67,7 @@ CORE RULES (NEVER VIOLATE):
    - Never rename, alter, shorten, or invent IDs.
 
 7. CONCISENESS & SPEED:
-   - Keep shortDescription, criteria values, reasons, and differences crisp, concise, and focused (1-2 sentences max per item/value).
+   - Keep shortDescription, criteria values, reasons, advantages, and differences crisp, concise, and focused (1-2 sentences max per item/value).
    - This ensures responses never exceed token limits and JSON never truncates.
 
 8. OUTPUT FORMAT:
@@ -82,7 +94,11 @@ OUTPUT JSON SCHEMA:
   ],
   "bestOverall": {
     "itemId": "EXACT id from PAGE_DATA or null",
-    "reason": "string explaining why this item is best overall, or explaining why itemId is null (e.g. insufficient data or items are tied)"
+    "verdictSummary": "string (crisp executive bottom line for this decision)",
+    "reason": "string (detailed rationale explaining the decision based on stated evidence)",
+    "keyAdvantages": ["string", "string"],
+    "tradeOffs": ["string", "string"],
+    "decisionConfidence": "high|medium|cautious"
   },
   "bestFor": [
     { "label": "string", "itemId": "EXACT id from PAGE_DATA", "reason": "string" }
@@ -484,6 +500,18 @@ PROMPT;
             }
             if (!isset($result['bestOverall']['reason'])) {
                 $result['bestOverall']['reason'] = $result['bestOverall']['rationale'];
+            }
+            if (!isset($result['bestOverall']['verdictSummary']) || trim((string)$result['bestOverall']['verdictSummary']) === '') {
+                $result['bestOverall']['verdictSummary'] = $result['bestOverall']['reason'] ?? '';
+            }
+            if (!isset($result['bestOverall']['keyAdvantages']) || !is_array($result['bestOverall']['keyAdvantages'])) {
+                $result['bestOverall']['keyAdvantages'] = [];
+            }
+            if (!isset($result['bestOverall']['tradeOffs']) || !is_array($result['bestOverall']['tradeOffs'])) {
+                $result['bestOverall']['tradeOffs'] = [];
+            }
+            if (!isset($result['bestOverall']['decisionConfidence'])) {
+                $result['bestOverall']['decisionConfidence'] = $boItemId ? 'high' : 'cautious';
             }
         }
 
