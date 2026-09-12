@@ -232,7 +232,7 @@ export default function Results() {
   // Source Links list
   const sourceLinksList = Array.isArray(data.sourceLinks) ? data.sourceLinks : []
 
-  // Evaluate Best Overall data
+  // Evaluate Best Overall data & Final Verdict Engine
   const bestOverallObj = data.bestOverall
   const winnerItem = bestOverallObj?.itemId
     ? items.find((i: any) => i.id === bestOverallObj.itemId)
@@ -242,9 +242,19 @@ export default function Results() {
     : bestOverallObj?.itemId
     ? bestOverallObj.itemId
     : 'No Single Winner (Tied / Incomparable Trade-offs)'
+  const verdictSummary = bestOverallObj?.verdictSummary
+    ? safeText(bestOverallObj.verdictSummary)
+    : null
   const winnerReason = bestOverallObj?.reason
     ? safeText(bestOverallObj.reason)
     : 'Items represent differing specifications and trade-offs without a single objective winner.'
+  const keyAdvantages: string[] = Array.isArray(bestOverallObj?.keyAdvantages)
+    ? bestOverallObj.keyAdvantages
+    : []
+  const tradeOffs: string[] = Array.isArray(bestOverallObj?.tradeOffs)
+    ? bestOverallObj.tradeOffs
+    : []
+  const decisionConfidence: string = bestOverallObj?.decisionConfidence || (winnerItem ? 'high' : 'cautious')
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 p-6 md:p-8 font-sans">
@@ -331,23 +341,99 @@ export default function Results() {
             </div>
           </div>
 
-          {/* ── 2. BEST OVERALL CARD (SPEC Section 21.2) ───────────────────── */}
-          <section className="bg-gradient-to-br from-indigo-950/40 via-gray-900 to-purple-950/30 border border-indigo-500/30 rounded-xl p-6 shadow-lg">
-          <div className="flex items-center gap-2 mb-2.5">
-            <span className="text-xl">🏆</span>
-            <h2 className="text-base font-bold uppercase tracking-wider text-indigo-300">
-              Best Overall Verdict
-            </h2>
-          </div>
-          <div className="space-y-1.5">
-            <p className="font-bold text-lg sm:text-xl text-white break-words">
-              {winnerTitle}
-            </p>
-            <p className="text-gray-300 break-words leading-relaxed text-sm max-w-4xl">
-              {winnerReason}
-            </p>
-          </div>
-        </section>
+          {/* ── 2. FINAL DECISION VERDICT (ENHANCED SPEC Section 21.2) ───── */}
+          <section className="relative overflow-hidden bg-gradient-to-br from-indigo-950/60 via-gray-900 to-purple-950/40 border-2 border-indigo-500/40 rounded-2xl p-6 sm:p-7 shadow-2xl space-y-5">
+            {/* Header / Badges */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-indigo-500/20 pb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 text-lg">
+                  🏆
+                </span>
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-widest text-indigo-400">
+                    Decision Engine Verdict
+                  </span>
+                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                    {winnerTitle}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+                  decisionConfidence === 'high'
+                    ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/40'
+                    : decisionConfidence === 'medium'
+                    ? 'bg-amber-950/60 text-amber-300 border-amber-500/40'
+                    : 'bg-gray-800 text-gray-300 border-gray-700'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    decisionConfidence === 'high' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                  }`} />
+                  Confidence: {decisionConfidence.toUpperCase()}
+                </span>
+              </div>
+            </div>
+
+            {/* Executive Bottom Line */}
+            {verdictSummary && (
+              <div className="bg-indigo-950/40 border border-indigo-500/20 rounded-xl p-4">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-300 block mb-1">
+                  Executive Bottom Line
+                </span>
+                <p className="text-white text-base font-semibold leading-relaxed">
+                  {verdictSummary}
+                </p>
+              </div>
+            )}
+
+            {/* Detailed Rationale */}
+            <div className="text-gray-300 leading-relaxed text-sm">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 block mb-1">
+                Decision Strategy & Evidence
+              </span>
+              <p className="break-words leading-relaxed text-sm">
+                {winnerReason}
+              </p>
+            </div>
+
+            {/* Key Advantages & Trade-Offs Matrix Grid */}
+            {(keyAdvantages.length > 0 || tradeOffs.length > 0) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                {keyAdvantages.length > 0 && (
+                  <div className="bg-emerald-950/20 border border-emerald-500/20 rounded-xl p-4 space-y-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                      <span>✨</span> Decisive Advantages
+                    </span>
+                    <ul className="space-y-1.5">
+                      {keyAdvantages.map((adv: string, idx: number) => (
+                        <li key={idx} className="text-xs text-gray-200 flex items-start gap-2">
+                          <span className="text-emerald-400 font-bold shrink-0">✓</span>
+                          <span>{adv}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {tradeOffs.length > 0 && (
+                  <div className="bg-amber-950/20 border border-amber-500/20 rounded-xl p-4 space-y-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                      <span>⚖️</span> Known Trade-Offs & Sacrifices
+                    </span>
+                    <ul className="space-y-1.5">
+                      {tradeOffs.map((to: string, idx: number) => (
+                        <li key={idx} className="text-xs text-gray-300 flex items-start gap-2">
+                          <span className="text-amber-400 font-bold shrink-0">•</span>
+                          <span>{to}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
 
         {/* ── 3. COMPARISON TABLE (SPEC Section 21.3 & Section 22) ───────── */}
         <section className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-xl">
