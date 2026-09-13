@@ -428,6 +428,60 @@ PROMPT;
             $result['sourceLinks'] = $sourceLinks;
         }
 
+        // ── Automatic Price Recovery & Cross-check ──────────────────────────────
+        // If LLM returned "Not stated" for Price/Cost but the extracted snapshot contains pricing lines,
+        // recover the exact price directly from the page snapshot so it is never falsely marked "Not stated".
+        $pageSnapshotMap = [];
+        foreach ($payload['pages'] as $p) {
+            $pageSnapshotMap[$p['id']] = $p['importantText'] ?? '';
+        }
+
+        if (isset($result['criteria']) && is_array($result['criteria'])) {
+            foreach ($result['criteria'] as &$crit) {
+                $cName = $crit['name'] ?? '';
+                if (preg_match('/price|cost|pricing|fee|rate/i', $cName)) {
+                    if (isset($crit['values']) && is_array($crit['values'])) {
+                        foreach ($crit['values'] as &$valEntry) {
+                            $vItemId = $valEntry['itemId'] ?? '';
+                            $currentVal = trim((string)($valEntry['value'] ?? ''));
+                            if (($currentVal === '' || strcasecmp($currentVal, 'Not stated') === 0) && isset($pageSnapshotMap[$vItemId])) {
+                                $pageText = $pageSnapshotMap[$vItemId];
+                                $recoveredPrice = null;
+
+                                // 1. Try to find price in DETECTED PRICES & OFFERS block
+                                if (preg_match('/===\s*DETECTED PRICES & OFFERS\s*===([^=]+)/i', $pageText, $pm)) {
+                                    $pLines = array_filter(array_map('trim', explode("\n", $pm[1])));
+                                    if (!empty($pLines)) {
+                                        $recoveredPrice = implode(' / ', array_slice($pLines, 0, 3));
+                                    }
+                                }
+
+                                // 2. Try to find in PAGE META & PRICING
+                                if (!$recoveredPrice && preg_match('/(?:product:price:amount|price):\s*([^\n]+)/i', $pageText, $pm)) {
+                                    $recoveredPrice = trim($pm[1]);
+                                    if (preg_match('/product:price:currency:\s*([^\n]+)/i', $pageText, $cm)) {
+                                        $recoveredPrice .= ' ' . trim($cm[1]);
+                                    }
+                                }
+
+                                // 3. Try regex scan for Taka ৳, BDT, Tk, $, €, £, ₹
+                                if (!$recoveredPrice && preg_match('/([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?\s*(?:৳|tk|bdt|taka)|(?:৳|\$|€|£|₹)\s*[0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)/iu', $pageText, $rm)) {
+                                    $recoveredPrice = trim($rm[1]);
+                                }
+
+                                if ($recoveredPrice) {
+                                    $valEntry['value'] = $recoveredPrice;
+                                    $valEntry['confidence'] = 'high';
+                                }
+                            }
+                        }
+                        unset($valEntry);
+                    }
+                }
+            }
+            unset($crit);
+        }
+
         // Build 2D matrix table { headers: [...], rows: [...] }
         if (!isset($result['table'])) {
             $headers = ['Feature / Metric'];
