@@ -61,12 +61,13 @@ CORE RULES (NEVER VIOLATE):
    - Put the winner's exact page id in "winnerItemIds".
    - Assign "importance" ("high", "medium", "low") based on the USER_GOAL.
 
-5. DECISIVE VERDICT & BEST OVERALL SELECTION (MANDATORY):
+6. DECISIVE VERDICT & BEST OVERALL SELECTION (MANDATORY):
    - YOU MUST GIVE A DEFINITIVE WINNER in "bestOverall.itemId" whenever at least one item offers superior value, specs, or alignment with USER_GOAL.
-   - Do NOT default to "No Single Winner" or tie unless all items are literally identical or all page data is completely blank. Even when trade-offs exist (e.g. Phone A has better cameras while Phone B is cheaper), weigh the factors (price-to-performance, stated user budget/goal, modern specs) and pick the definitive BEST OVERALL item.
+   - Do NOT default to "No Single Winner". 
+   - CRITICAL DECISION RULE: NEVER base the "Best Overall" choice solely on price! You MUST evaluate the overall technical specifications, performance parameters, and features to determine the most favorable purchase for the customer. Use the normalized currency only as a baseline for fairness, but prioritize the product that delivers the strongest specs and value proposition.
    - "bestOverall.itemId": The EXACT id of the winning item (e.g., "page-1").
    - "bestOverall.verdictSummary": A crisp, punchy 1-2 sentence executive verdict declaring why this winner is the champion for this comparison.
-   - "bestOverall.reason": Thorough breakdown of the decision rationale comparing the winner against the rivals based on stated evidence.
+   - "bestOverall.reason": Thorough breakdown of the decision rationale comparing the winner against the rivals based on stated evidence and technical parameters.
    - "bestOverall.keyAdvantages": 2 to 4 bullet points explaining what makes the winner superior.
    - "bestOverall.tradeOffs": 1 to 3 honest trade-offs or compromises the buyer makes with this choice.
    - "bestOverall.decisionConfidence": "high" or "medium".
