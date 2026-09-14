@@ -465,8 +465,19 @@ PROMPT;
                                 }
 
                                 // 3. Try regex scan for Taka ৳, BDT, Tk, $, €, £, ₹
-                                if (!$recoveredPrice && preg_match('/([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?\s*(?:৳|tk|bdt|taka)|(?:৳|\$|€|£|₹)\s*[0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)/iu', $pageText, $rm)) {
-                                    $recoveredPrice = trim($rm[1]);
+                                if (!$recoveredPrice && preg_match_all('/([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?\s*(?:৳|tk|bdt|taka|usd|eur|gbp)|(?:৳|\$|€|£|₹|usd|eur|gbp)\s*[0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)/iu', $pageText, $allMatches)) {
+                                    $candidates = array_filter(array_map('trim', $allMatches[1]));
+                                    if (!empty($candidates)) {
+                                        // Use the last match — on sale pages it's the discounted/current price
+                                        $recoveredPrice = end($candidates);
+                                        // If we have multiple (old + new), show both for context
+                                        if (count($candidates) >= 2) {
+                                            $unique = array_unique(array_values($candidates));
+                                            if (count($unique) >= 2) {
+                                                $recoveredPrice = implode(' / ', array_slice($unique, -2));
+                                            }
+                                        }
+                                    }
                                 }
 
                                 if ($recoveredPrice) {
